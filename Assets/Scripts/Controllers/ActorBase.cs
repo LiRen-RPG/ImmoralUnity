@@ -36,6 +36,12 @@ namespace Immortal.Controllers
         public Immortal.Item.Inventory inventory;
         protected Immortal.Combat.CombatAI combatAI;
 
+        protected virtual void Awake()
+        {
+            // 在 Awake 中初始化背包，确保在所有 Start() 之前完成
+            InitializeInventory();
+        }
+
         protected virtual void Start()
         {
             // 优先在自身查找，找不到则向子节点查找（Spine 作为子节点时使用）
@@ -45,9 +51,6 @@ namespace Immortal.Controllers
                 skeleton = GetComponentInChildren<SkeletonAnimation>();
 
             logicalPosition = transform.position;
-            
-            // 初始化背包系统
-            InitializeInventory();
             
             // 加载攻击预制体（Unity资源加载方式不同）
             LoadAttackPrefab();
@@ -82,7 +85,7 @@ namespace Immortal.Controllers
         // 获取背包容量（子类可重写）
         protected virtual int GetInventoryCapacity()
         {
-            return 33; // 默认背包容量
+            return 70; // 默认背包容量
         }
 
         // 获取背包实例

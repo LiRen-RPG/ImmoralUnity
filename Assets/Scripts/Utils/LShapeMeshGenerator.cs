@@ -5,15 +5,15 @@ namespace Immortal.Utils
     /// <summary>
     /// L型Mesh生成工具：两个互相垂直的平面，共享一条边
     ///
-    ///       竖直面（墙面，XY平面，z=0）
+    ///       竖直面（墙面，XY平面，z=depth）
     ///       |\
     ///       | \
-    ///       |  \ ← 共享边（X轴方向）
+    ///       |  \ ← 共享边（X轴方向，z=depth）
     ///       |___\__________
-    ///            水平面（地面，XZ平面，y=0）
+    ///   z=depth  水平面（地面，XZ平面，y=0）  z=0（外端）
     ///
     ///   width  : 两个平面的宽度（X轴）
-    ///   hDepth : 水平面的纵深（Z轴）
+    ///   depth  : 水平面的纵深（Z轴，外端 z=0，共享边 z=depth）
     ///   vHeight: 竖直面的高度（Y轴）
     /// </summary>
     public static class LShapeMeshGenerator
@@ -22,30 +22,30 @@ namespace Immortal.Utils
         /// 生成L型Mesh（双面可见）
         /// </summary>
         /// <param name="width">两平面共享的宽度（X轴，单位：米）</param>
-        /// <param name="hDepth">水平面纵深（Z轴，单位：米）</param>
+        /// <param name="depth">水平面纵深（Z轴，单位：米）</param>
         /// <param name="vHeight">竖直面高度（Y轴，单位：米）</param>
         public static Mesh Generate(
             float width   = 2f,
-            float hDepth  = 1.5f,
-            float vHeight = 2f)
+            float depth   = 1.5f,
+            float vHeight = 0.5f)
         {
             width   = Mathf.Max(width,   0.01f);
-            hDepth  = Mathf.Max(hDepth,  0.01f);
+            depth   = Mathf.Max(depth,   0.01f);
             vHeight = Mathf.Max(vHeight, 0.01f);
 
             float halfW = width * 0.5f;
 
-            // ── 水平面（y=0，XZ平面，向 -Z 延伸）
-            Vector3 h0 = new Vector3(-halfW, 0,        0); // 前左（共享边起点）
-            Vector3 h1 = new Vector3( halfW, 0,        0); // 前右（共享边终点）
-            Vector3 h2 = new Vector3( halfW, 0, -hDepth); // 后右
-            Vector3 h3 = new Vector3(-halfW, 0, -hDepth); // 后左
+            // ── 水平面（y=0，XZ平面，外端 z=0，共享边 z=depth）
+            Vector3 h0 = new Vector3(-halfW, 0,       depth); // 前左（共享边起点）
+            Vector3 h1 = new Vector3( halfW, 0,       depth); // 前右（共享边终点）
+            Vector3 h2 = new Vector3( halfW, 0,           0); // 后右（外端，z=0）
+            Vector3 h3 = new Vector3(-halfW, 0,           0); // 后左（外端，z=0）
 
-            // ── 竖直面（z=0，XY平面，法线朝 -Z）
-            Vector3 v0 = new Vector3(-halfW, 0,       0); // 下左（共享边起点）
-            Vector3 v1 = new Vector3( halfW, 0,       0); // 下右（共享边终点）
-            Vector3 v2 = new Vector3( halfW, vHeight, 0); // 上右
-            Vector3 v3 = new Vector3(-halfW, vHeight, 0); // 上左
+            // ── 竖直面（z=depth，XY平面，法线朝 -Z）
+            Vector3 v0 = new Vector3(-halfW, 0,       depth); // 下左（共享边起点）
+            Vector3 v1 = new Vector3( halfW, 0,       depth); // 下右（共享边终点）
+            Vector3 v2 = new Vector3( halfW, vHeight, depth); // 上右
+            Vector3 v3 = new Vector3(-halfW, vHeight, depth); // 上左
 
             // 顶点排列：[水平上面0-3][竖直前面4-7]
             Vector3[] verts = new Vector3[]
@@ -54,8 +54,8 @@ namespace Immortal.Utils
                 v0, v1, v2, v3,  // 竖直面（法线-Z）
             };
 
-            float totalLen = hDepth + vHeight;
-            float sharedV  = hDepth / totalLen;
+            float totalLen = depth + vHeight;
+            float sharedV = depth / totalLen;
 
             Vector2[] uvs = new Vector2[]
             {
