@@ -14,7 +14,7 @@ namespace Immortal.Controllers
         
         // 血条相关属性
         private ProgressBarController healthBar;
-        private Vector3 healthBarOffset = new Vector3(0, 2.2f, 0); // 血条在角色头顶的偏移
+        private Vector3 healthBarOffset = new Vector3(0, 2.5f, 0); // 血条在角色头顶的偏移
 
         protected Vector3 direction = Vector3.zero;
         public float moveSpeed = 1.4f; // Movement speed (~1.4 m/s, normal human walking speed)
@@ -29,8 +29,11 @@ namespace Immortal.Controllers
         protected float timescaleBeforeJump = 0;
 
         protected Rigidbody rigidBody;
+        protected CapsuleCollider capsuleCollider;
+        private const float initialColliderHeight = 1.70f;
         protected GameObject shadow;
         protected Vector3 lastVelocity = Vector3.zero;
+        private Camera mainCamera;
         
         public Immortal.Core.Cultivator cultivator;
         public Immortal.Item.Inventory inventory;
@@ -62,11 +65,18 @@ namespace Immortal.Controllers
             }
             
             shadow = transform.Find("shadow")?.gameObject;
+            mainCamera = Camera.main;
+            capsuleCollider = GetComponent<CapsuleCollider>();
+            if (capsuleCollider != null)
+                capsuleCollider.height = initialColliderHeight;
+            ApplyCameraStretch();
+
             Idle(); // Play idle animation
             
             // Unity碰撞事件设置
             SetupCollisionEvents();
-            CreateHealthBar();
+            if (Application.isPlaying)
+                CreateHealthBar();
         }
 
         public Immortal.Combat.CombatAI GetCombatAI()
@@ -97,7 +107,7 @@ namespace Immortal.Controllers
         protected virtual void OnDestroy()
         {
             // 清理血条节点
-            if (healthBar != null)
+            if (Application.isPlaying && healthBar != null)
             {
                 Destroy(healthBar.gameObject);
             }
@@ -168,7 +178,14 @@ namespace Immortal.Controllers
         {
             if (skeleton != null)
             {
-                var trackEntry = skeleton.AnimationState.SetAnimation(1, "attack1", false);
+                try
+                {
+                    skeleton.AnimationState.SetAnimation(1, "attack1", false);
+                }
+                catch (System.ArgumentException e)
+                {
+                    Debug.LogWarning($"[ActorBase] 播放攻击动画失败: {e.Message}");
+                }
                 Vector3 position = transform.position;
                 var skillInstance = cultivator.CreateSkillInstance(0);
                 
@@ -276,6 +293,25 @@ namespace Immortal.Controllers
 
             // Handle attack animation completion
             HandleAnimationCompletion();
+        }
+
+        protected virtual void LateUpdate()
+        {
+            ApplyCameraStretch();
+        }
+
+        private void ApplyCameraStretch()
+        {
+            if (skeleton == null || mainCamera == null) return;
+            float cameraXAngle = mainCamera.transform.eulerAngles.x;
+            float stretchY = Mathf.Sin(cameraXAngle * Mathf.Deg2Rad) * 2f;
+            Vector3 scale = skeleton.transform.localScale;
+            scale.y = stretchY * Mathf.Abs(scale.x);
+            skeleton.transform.localScale = scale;
+            if (capsuleCollider != null){
+                capsuleCollider.height = stretchY * initialColliderHeight;
+                capsuleCollider.center = new Vector3(0, capsuleCollider.height / 2f, 0);
+            }
         }
 
         private void HandleAnimationCompletion()

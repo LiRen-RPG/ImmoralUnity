@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Immortal.Controllers;
+using Immortal.Combat;
 
 namespace Immortal.Quest
 {
@@ -177,39 +179,37 @@ namespace Immortal.Quest
         public override void PrepareToStart()
         {
             Debug.Log($"准备开始战斗任务: {conditionId}");
-            // 这里可以添加战斗任务前的准备逻辑
-            
-            // 获取修仙者和战斗管理器
-            var cultivators = CultivatorManager.Instance?.GetAllCultivators();
-            var combatManager = CombatManager.Instance;
 
-            if (cultivators != null && combatManager != null)
+            var cultivators  = ActorControl.Cultivators;
+            var combatManager = Immortal.Combat.CombatManager.Instance;
+
+            if (combatManager == null)
             {
-                var friendTeam = new List<object>();
-                var enemyTeam = new List<object>();
-
-                // 添加玩家角色（ID=0）和朋友
-                friendTeam.Add(cultivators[0]); // 假设玩家是ID=0
-                foreach (int friendId in friends)
-                {
-                    if (cultivators.ContainsKey(friendId))
-                    {
-                        friendTeam.Add(cultivators[friendId]);
-                    }
-                }
-
-                // 添加敌人
-                foreach (int enemyId in enemies)
-                {
-                    if (cultivators.ContainsKey(enemyId))
-                    {
-                        enemyTeam.Add(cultivators[enemyId]);
-                    }
-                }
-
-                // 设置战斗队伍
-                combatManager.SetTeams(friendTeam.ToArray(), enemyTeam.ToArray());
+                Debug.LogError("[CombatCondition] 找不到 CombatManager 单例");
+                return;
             }
+
+            var friendTeam = new List<object>();
+            var enemyTeam  = new List<object>();
+
+            // 主角（id=0）始终在友方
+            if (cultivators.TryGetValue(0, out var playerPair) && playerPair.actorBase != null)
+                friendTeam.Add(playerPair.actorBase);
+
+            foreach (int friendId in friends)
+            {
+                if (cultivators.TryGetValue(friendId, out var pair) && pair.actorBase != null)
+                    friendTeam.Add(pair.actorBase);
+            }
+
+            foreach (int enemyId in enemies)
+            {
+                if (cultivators.TryGetValue(enemyId, out var pair) && pair.actorBase != null)
+                    enemyTeam.Add(pair.actorBase);
+            }
+
+            Debug.Log($"[CombatCondition] 友方 {friendTeam.Count} 人，敌方 {enemyTeam.Count} 人");
+            combatManager.SetTeams(friendTeam.ToArray(), enemyTeam.ToArray());
         }
     }
 
@@ -274,52 +274,4 @@ namespace Immortal.Quest
         }
     }
 
-    // 占位符类（需要在其他地方实现）
-    public class CultivatorManager : MonoBehaviour
-    {
-        public static CultivatorManager Instance { get; private set; }
-
-        private void Awake()
-        {
-            if (Instance == null)
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
-        }
-
-        public Dictionary<int, object> GetAllCultivators()
-        {
-            // 实现获取所有修仙者的逻辑
-            return new Dictionary<int, object>();
-        }
-    }
-
-    public class CombatManager : MonoBehaviour
-    {
-        public static CombatManager Instance { get; private set; }
-
-        private void Awake()
-        {
-            if (Instance == null)
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
-        }
-
-        public void SetTeams(object[] friendTeam, object[] enemyTeam)
-        {
-            // 实现设置战斗队伍的逻辑
-            Debug.Log($"设置战斗队伍 - 友方: {friendTeam.Length}, 敌方: {enemyTeam.Length}");
-        }
-    }
 }

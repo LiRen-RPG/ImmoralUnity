@@ -37,7 +37,7 @@ namespace Immortal.Controllers
         {
             // Unity中直接通过Resources加载预制体
             roomPrefab = Resources.Load<GameObject>("Prefabs/Scene/Room");
-            openSpacePrefab = Resources.Load<GameObject>("Prefabs/Scene/OpenSpace");
+            openSpacePrefab = Resources.Load<GameObject>("Prefabs/Scene/Open");
             corridorPrefab = Resources.Load<GameObject>("Prefabs/Scene/Corridor");
             pillarNearPrefab = Resources.Load<GameObject>("Prefabs/Scene/PillarNear");
             pillarFarPrefab = Resources.Load<GameObject>("Prefabs/Scene/PillarFar");
@@ -63,13 +63,8 @@ namespace Immortal.Controllers
 
         private void LoadQuest()
         {
-            // Unity中加载任务系统的逻辑
-            // 这里可以调用Quest系统的初始化方法
-            var questManager = FindObjectOfType<Immortal.Quest.QuestManager>();
-            if (questManager != null)
-            {
-                // questManager.LoadQuests(gameObject);
-            }
+            // 镜像 Scene.ts 中的 loadQuest(this.node) 调用
+            Immortal.Quest.LoadQuest.Execute(this, gameObject);
         }
 
         public void LoadMapRow(int rowIdx)
@@ -105,23 +100,7 @@ namespace Immortal.Controllers
                 if (prefab != null)
                 {
                     GameObject node = Instantiate(prefab, transform);
-                    
-                    // 获取节点大小（Unity中通过Renderer或Collider获取）
-                    Renderer nodeRenderer = node.GetComponent<Renderer>();
-                    Vector3 size = Vector3.one;
-                    if (nodeRenderer != null)
-                    {
-                        size = nodeRenderer.bounds.size;
-                    }
-                    else
-                    {
-                        // 如果没有Renderer，尝试从Collider获取
-                        Collider nodeCollider = node.GetComponent<Collider>();
-                        if (nodeCollider != null)
-                        {
-                            size = nodeCollider.bounds.size;
-                        }
-                    }
+                    Vector3 size = GetPrefabSize(node);
 
                     // 设置节点位置
                     Vector3 nodePosition = node.transform.position;
@@ -160,11 +139,7 @@ namespace Immortal.Controllers
                     GameObject tempNode = Instantiate(tempPrefab);
                     
                     Renderer tempRenderer = tempNode.GetComponent<Renderer>();
-                    Vector3 tempSize = Vector3.one;
-                    if (tempRenderer != null)
-                    {
-                        tempSize = tempRenderer.bounds.size;
-                    }
+                    Vector3 tempSize = GetPrefabSize(tempNode);
                     
                     mapWidth = row.Count * tempSize.x;
                     
@@ -225,6 +200,38 @@ namespace Immortal.Controllers
             // 生成新的地图数据
             mapData = RandomMapGenerator.Generate(width, height);
             ReloadMap();
+        }
+
+        /// <summary>
+        /// 从已实例化的 GameObject 读取本地尺寸。
+        /// 优先使用 MeshFilter.sharedMesh（本地包围盒，实例化后立即可用），
+        /// 其次使用 SpriteRenderer.sprite.bounds，最后退回 Collider.bounds。
+        /// </summary>
+        /// <summary>
+        /// 读取 Tile Prefab 的布局尺寸。
+        /// 优先从 LShapeComponent 读取（width=X, depth=Z），这是 Prefab 上
+        /// 已有的权威数据，实例化后立即可用，无需任何渲染或物理更新。
+        /// 兜底使用根节点 BoxCollider.size（同样在 Inspector 中手填）。
+        /// </summary>
+        private static Vector3 GetPrefabSize(GameObject go)
+        {
+            // 1. LShapeComponent：Prefab 自身携带的设计尺寸，最可靠
+            LShapeComponent ls = go.GetComponent<LShapeComponent>();
+            if (ls != null)
+            {
+                Vector3 s = go.transform.lossyScale;
+                return new Vector3(ls.width * s.x, ls.totalLength * s.y, ls.depth * s.z);
+            }
+
+            // 2. 根节点 BoxCollider.size（子节点的 Collider 可能是墙/地等局部碰撞体，不能代表整体）
+            BoxCollider box = go.GetComponent<BoxCollider>();
+            if (box != null)
+            {
+                Vector3 s = go.transform.lossyScale;
+                return new Vector3(box.size.x * s.x, box.size.y * s.y, box.size.z * s.z);
+            }
+
+            return Vector3.one;
         }
     }
 }

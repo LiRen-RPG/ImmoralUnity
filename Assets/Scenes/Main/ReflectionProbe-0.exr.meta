@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: DHlOsSKvUi6hCNG4kxRxv89XFhcG5/6vZOA/lBFFdCgoQEqqJSDK9JQ=
+guid: B3xNvXisAHunoWQgf3jtzcwPpGfonwhuJe48dsuFX6qS5mRSQh8W0Qk=
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -46,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 0
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -76,7 +76,7 @@ TextureImporter:
     maxPlaceholderSize: 32
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0

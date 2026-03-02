@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using Immortal.Core;
+using Immortal.Controllers;
 
 namespace Immortal.Quest
 {
@@ -51,11 +52,11 @@ namespace Immortal.Quest
         {
             try
             {
-                // 获取说话者信息
-                var cultivators = CultivatorManager.Instance?.GetAllCultivators();
+                // 获取说话者信息（使用 ActorControl.Cultivators 全局字典）
+                var cultivators = ActorControl.Cultivators;
                 if (cultivators != null && cultivators.ContainsKey(speakerId))
                 {
-                    var cultivator = cultivators[speakerId] as Cultivator;
+                    var cultivator = cultivators[speakerId]?.cultivator;
                     if (cultivator != null)
                     {
                         // 根据修仙者属性选择声音类型
@@ -177,6 +178,12 @@ namespace Immortal.Quest
 
         // 执行完成操作（由子类实现）
         public abstract void Execute();
+
+        /// <summary>
+        /// 准备开始本事件（对应 TS BaseCompletion.preparetoStart）。
+        /// 子类按需重写，例如战斗完成条件会在此设置队伍。
+        /// </summary>
+        public virtual void PrepareToStart() { }
     }
 
     // 位置完成条件
@@ -256,13 +263,56 @@ namespace Immortal.Quest
     public class CombatCompletion : BaseCompletion
     {
         public int[] enemyIds;
+        public int[] friendIds;   // 额外友方 NPC id（不含主角 id=0，主角自动加入）
         public bool mustWin;
 
-        public CombatCompletion(string completionId, int[] enemyIds, bool mustWin = true)
+        public CombatCompletion(string completionId, int[] enemyIds, int[] friendIds = null, bool mustWin = true)
             : base(completionId, ConditionType.Combat)
         {
-            this.enemyIds = enemyIds ?? new int[0];
-            this.mustWin = mustWin;
+            this.enemyIds  = enemyIds  ?? new int[0];
+            this.friendIds = friendIds ?? new int[0];
+            this.mustWin   = mustWin;
+        }
+
+        /// <summary>
+        /// 设置战斗队伍并激活 CombatManager，对应 CombatCondition.preparetoStart() in TS。
+        /// </summary>
+        public override void PrepareToStart()
+        {
+            Debug.Log($"[CombatCompletion] 准备战斗: {completionId}");
+
+            var cultivators  = ActorControl.Cultivators;
+            var combatManager = Immortal.Combat.CombatManager.Instance;
+
+            if (combatManager == null)
+            {
+                Debug.LogError("[CombatCompletion] 找不到 CombatManager 单例");
+                return;
+            }
+
+            var friendTeam = new List<object>();
+            var enemyTeam  = new List<object>();
+
+            // 主角（id=0）始终在友方
+            if (cultivators.TryGetValue(0, out var playerPair) && playerPair.actorBase != null)
+                friendTeam.Add(playerPair.actorBase);
+
+            // 额外友方 NPC
+            foreach (int fid in friendIds)
+            {
+                if (cultivators.TryGetValue(fid, out var pair) && pair.actorBase != null)
+                    friendTeam.Add(pair.actorBase);
+            }
+
+            // 敌方 NPC
+            foreach (int eid in enemyIds)
+            {
+                if (cultivators.TryGetValue(eid, out var pair) && pair.actorBase != null)
+                    enemyTeam.Add(pair.actorBase);
+            }
+
+            Debug.Log($"[CombatCompletion] 友方 {friendTeam.Count} 人，敌方 {enemyTeam.Count} 人");
+            combatManager.SetTeams(friendTeam.ToArray(), enemyTeam.ToArray());
         }
 
         public override bool IsCompleted(object args)

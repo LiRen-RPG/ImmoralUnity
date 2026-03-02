@@ -342,7 +342,7 @@ Shader "Immortal/StandardReflection"
                 // ── 屏幕空间反射贴图 ──────────────────────────────────────
                 // 将裁剪空间坐标做透视除法得到 [0,1] 屏幕 UV
                 {
-                    float2 screenUV = i.screenPos.xy/i.screenPos.w * 0.5 + 0.5;
+                    float2 screenUV = i.screenPos.xy/i.screenPos.w * float2(-0.5, -0.5) + 0.5;
                     half4  reflSample = tex2D(_ReflectionTex, screenUV);
                     half   reflAlpha  = reflSample.a * _ReflectionStrength;
 

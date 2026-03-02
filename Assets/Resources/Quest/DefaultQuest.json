@@ -1,0 +1,186 @@
+{
+  "quest": {
+    "quest_id": "q_001",
+    "title": "至尊骨劫",
+    "triggers": [
+      {
+        "type": "location",
+        "conditionId": "trigger_1",
+        "areaId": "迷雾沼泽"
+      }
+    ],
+    "event_chain": [
+      {
+        "event_id": "e1",
+        "participants": [
+          {"npc_id": 0},
+          {"npc_id": 1}
+        ],
+        "dialogue": [
+          {"speaker_id": 1, "text": "小友留步！老夫乃玄霄仙尊残魂，被封印在这块玉佩中三千年了..."},
+          {"speaker_id": 0, "text": "玉佩？这不是我在古战场捡到的普通玉石吗？"},
+          {"speaker_id": 1, "text": "快逃！那些黑袍修士是来夺取你体内至尊骨的！他们能感应到至尊骨苏醒的气息！"}
+        ],
+        "completion": {
+          "type": "combat",
+          "conditionId": "combat_1",
+          "enemies": [2],
+          "friends": []
+        }
+      },
+      {
+        "event_id": "e2",
+        "participants": [
+          {"npc_id": 0},
+          {"npc_id": 1}
+        ],
+        "dialogue": [
+          {"speaker_id": 1, "text": "方才那些是幽冥殿的挖骨使。三千年前他们用灭魂钉暗算老夫，将我的至尊骨挖走..."},
+          {"speaker_id": 0, "text": "我体内怎会有至尊骨？我只是个普通修士！"},
+          {"speaker_id": 1, "text": "你的至尊骨正在觉醒。若不想被挖骨炼魂，必须找到我的遗骸，那里藏着对抗幽冥殿的秘密！"},
+          {"speaker_id": 1, "text": "先去坠星湖底取回我的'九转锁魂匣'，它能掩盖至尊骨气息。"}
+        ],
+        "completion": {
+          "type": "item",
+          "conditionId": "item_1",
+          "itemId": "itm_001",
+          "requiredQuantity": 1
+        }
+      },
+      {
+        "event_id": "e3",
+        "participants": [
+          {"npc_id": 0},
+          {"npc_id": 5}
+        ],
+        "dialogue": [
+          {"speaker_id": 5, "text": "止步！湖底封印的是上古凶物，你这小辈也敢触碰？"},
+          {"speaker_id": 0, "text": "前辈误会了，我只需取回玄霄仙尊遗物对抗幽冥殿..."},
+          {"speaker_id": 5, "text": "玄霄？那个叛徒？！他当年私通域外天魔才被挖骨！你竟敢替他取物？"},
+          {"speaker_id": 5, "text": "除非你能接下老夫三招，证明你不是天魔傀儡！"}
+        ],
+        "completion": {
+          "type": "combat",
+          "conditionId": "combat_2",
+          "enemies": [5],
+          "friends": []
+        }
+      },
+      {
+        "event_id": "e4",
+        "participants": [
+          {"npc_id": 0},
+          {"npc_id": 1},
+          {"npc_id": 5}
+        ],
+        "dialogue": [
+          {"speaker_id": 5, "text": "不可能...你使的竟是失传的'九曜星辰诀'？此乃正道至高心法！"},
+          {"speaker_id": 1, "text": "天枢老儿，三千年了你还是这般迂腐！当年是幽冥殿主伪装成我释放天魔！"},
+          {"speaker_id": 5, "text": "什么？！那...那你快带这孩子去取'轮回镜'，它能照出至尊骨真相！"},
+          {"speaker_id": 1, "text": "轮回镜在幽冥殿禁地。小子，用锁魂匣伪装成挖骨使混进去！"}
+        ],
+        "completion": {
+          "type": "location",
+          "conditionId": "loc_1",
+          "areaId": "幽冥禁地",
+          "requiredItem": "itm_001"
+        }
+      }
+    ]
+  },
+  "npcs": [
+    {
+      "id": 0,
+      "name": "主角",
+      "element": 1,
+      "gender": 1,
+      "personality": 0.5,
+      "baseAttack": 1000,
+      "baseDefense": 1000,
+      "baseSpeed": 6,
+      "baseCritRate": 1000,
+      "baseAccuracy": 1000,
+      "appearanceAge": 20
+    },
+    {
+      "id": 1,
+      "name": "玄霄仙尊残魂",
+      "element": 3,
+      "gender": 1,
+      "personality": 0.9,
+      "baseAttack": 300,
+      "baseDefense": 500,
+      "baseSpeed": 8,
+      "baseCritRate": 1500,
+      "baseAccuracy": 2000,
+      "appearanceAge": 70
+    },
+    {
+      "id": 2,
+      "name": "幽冥挖骨使",
+      "element": 4,
+      "gender": 1,
+      "personality": 0.8,
+      "baseAttack": 800,
+      "baseDefense": 700,
+      "baseSpeed": 5,
+      "baseCritRate": 1200,
+      "baseAccuracy": 1100,
+      "appearanceAge": 40
+    },
+    {
+      "id": 3,
+      "name": "幽冥挖骨使",
+      "element": 4,
+      "gender": 0,
+      "personality": 0.8,
+      "baseAttack": 750,
+      "baseDefense": 750,
+      "baseSpeed": 5,
+      "baseCritRate": 1300,
+      "baseAccuracy": 1000,
+      "appearanceAge": 35
+    },
+    {
+      "id": 4,
+      "name": "幽冥挖骨使",
+      "element": 4,
+      "gender": 1,
+      "personality": 0.7,
+      "baseAttack": 900,
+      "baseDefense": 600,
+      "baseSpeed": 6,
+      "baseCritRate": 1100,
+      "baseAccuracy": 1200,
+      "appearanceAge": 45
+    },
+    {
+      "id": 5,
+      "name": "守湖长老天枢",
+      "element": 2,
+      "gender": 1,
+      "personality": 0.6,
+      "baseAttack": 2500,
+      "baseDefense": 1800,
+      "baseSpeed": 4,
+      "baseCritRate": 900,
+      "baseAccuracy": 2000,
+      "appearanceAge": 60
+    }
+  ],
+  "gameItems": [
+    {
+      "id": "itm_001",
+      "name": "九转锁魂匣",
+      "type": "treasure",
+      "rarity": "传说",
+      "description": "玄霄仙尊本命法宝，可遮蔽神魂气息",
+      "icon": "icon_lockbox",
+      "stackable": false,
+      "maxStack": 1,
+      "power": 5000,
+      "element": 3,
+      "uniqueEffect": "免疫神魂探测"
+    }
+  ]
+}
