@@ -5,7 +5,8 @@ Shader "Immortal/Spine-Skeleton-ReceiveShadow"
 
     Properties
     {
-        _Cutoff ("Shadow alpha cutoff", Range(0,1)) = 0.1
+        _ShadowCutoff ("Shadow alpha cutoff", Range(0,1)) = 0.1
+        _AlphaCutoff ("Alpha cutoff", Range(0,1)) = 0.1
         [NoScaleOffset] _MainTex ("Main Texture", 2D) = "black" {}
         [Toggle(_STRAIGHT_ALPHA_INPUT)] _StraightAlphaInput("Straight Alpha Texture", Int) = 0
 
@@ -32,14 +33,15 @@ Shader "Immortal/Spine-Skeleton-ReceiveShadow"
             "IgnoreProjector" = "False"
             "RenderType"      = "Opaque"
             "PreviewType"     = "Plane"
+            "DisableBatching" = "True"
             
         }
 
         Fog     { Mode Off }
         Cull    Off
         ZWrite  Off
-        Blend   One OneMinusSrcAlpha
         Lighting On
+        ZTest   LEqual         
 
         Stencil
         {
@@ -59,8 +61,10 @@ Shader "Immortal/Spine-Skeleton-ReceiveShadow"
         {
             Name "ForwardBase"
             Tags { "LightMode" = "ForwardBase" }
-
-            
+            ZTest   LEqual         
+            ZWrite  Off       
+            Blend   One OneMinusSrcAlpha
+     
             CGPROGRAM
 
             #pragma shader_feature _ _STRAIGHT_ALPHA_INPUT
@@ -75,8 +79,7 @@ Shader "Immortal/Spine-Skeleton-ReceiveShadow"
             #include "../../Spine/Runtime/spine-unity/Shaders/CGIncludes/Spine-Common.cginc"
             
             sampler2D _MainTex;
-
-
+            float     _AlphaCutoff;
             struct VertexInput
             {
                 float4 vertex      : POSITION;
@@ -109,6 +112,7 @@ Shader "Immortal/Spine-Skeleton-ReceiveShadow"
             float4 frag(VertexOutput i) : SV_Target
             {
                 float4 texColor = tex2D(_MainTex, i.uv);
+                clip(texColor.a - _AlphaCutoff);
 
                 #if defined(_STRAIGHT_ALPHA_INPUT)
 				texColor.rgb *= texColor.a;
@@ -136,29 +140,20 @@ Shader "Immortal/Spine-Skeleton-ReceiveShadow"
                 return col;
             }
             ENDCG
-        }
-
-        // ── Pass 2：追加光源（点光 / 聚光灯 / 额外方向光）────────────────
-        // ForwardAdd 每个额外光源执行一次，叠加到 ForwardBase 结果上
+        }    
+        // ── Pass 2：Alpha Test 写入Z ─────────────────────────────   
         Pass
         {
-            Name "ForwardAdd"
-            Tags { "LightMode" = "ForwardAdd" }
-            Blend One One   // 加法混合：叠加额外光源贡献
-            ZWrite Off
-            Fog { Mode Off }
-            Cull Off
-
+            Name "ZPostpass"
+            Tags { "LightMode" = "Always" }
+            ZWrite  On
+            ZTest   LEqual         
+            ColorMask 0             // 不写入任何颜色通道
+            Cull    Off
             CGPROGRAM
-            #pragma shader_feature _ _STRAIGHT_ALPHA_INPUT
             #pragma vertex   vert
             #pragma fragment frag
-            // 编译所有追加光源变体（方向光/点光/聚光灯 + 各自的阴影）
-            #pragma multi_compile_fwdadd_fullshadows
             #include "UnityCG.cginc"
-            #include "Lighting.cginc"
-            #include "AutoLight.cginc"
-            #include "../../Spine/Runtime/spine-unity/Shaders/CGIncludes/Spine-Common.cginc"
 
             sampler2D _MainTex;
 
@@ -173,56 +168,26 @@ Shader "Immortal/Spine-Skeleton-ReceiveShadow"
             {
                 float4 pos         : SV_POSITION;
                 float2 uv          : TEXCOORD0;
-                float4 vertexColor : COLOR;
-                float3 worldPos    : TEXCOORD2; // 世界坐标，用于点光/聚光灯方向计算
-                float3 worldNormal : TEXCOORD3;
-                LIGHTING_COORDS(4, 5)           // 距离衰减 + 阴影（TEXCOORD4/5）
             };
 
             VertexOutput vert(VertexInput v)
             {
                 VertexOutput o;
-                o.pos         = UnityObjectToClipPos(v.vertex);
-                o.uv          = v.uv;
-                o.vertexColor = v.vertexColor;
-                o.worldPos    = mul(unity_ObjectToWorld, v.vertex).xyz;
-                o.worldNormal = UnityObjectToWorldNormal(kPlaneNormalOS);
-                TRANSFER_VERTEX_TO_FRAGMENT(o)
+                o.pos   = UnityObjectToClipPos(v.vertex);
+                o.uv    = v.uv;
                 return o;
             }
 
-            float4 frag(VertexOutput i) : SV_Target
+            fixed4 frag(VertexOutput i) : SV_Target
             {
-                float4 texColor = tex2D(_MainTex, i.uv);
-                #if defined(_STRAIGHT_ALPHA_INPUT)
-                texColor.rgb *= texColor.a;
-                #endif
-                float4 col = texColor * i.vertexColor;
-
-                half3 worldNormal = normalize(i.worldNormal);
-
-                // 方向光：_WorldSpaceLightPos0 是方向向量（w=0）
-                // 点光/聚光灯：_WorldSpaceLightPos0 是位置（w=1），需要减去世界坐标
-                #if defined(DIRECTIONAL) || defined(DIRECTIONAL_COOKIE)
-                    half3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
-                #else
-                    half3 lightDir = normalize(_WorldSpaceLightPos0.xyz - i.worldPos);
-                #endif
-
-                half nl = max(0, dot(worldNormal, lightDir));
-
-                // 包含距离衰减 + 阴影遮蔽（AutoLight.cginc 宏）
-                UNITY_LIGHT_ATTENUATION(atten, i, i.worldPos)
-
-                fixed3 addLight = nl * _LightColor0.rgb * atten;
-                col.rgb *= addLight;
-
-                return col;
+                fixed4 texColor = tex2D(_MainTex, i.uv);
+                // alpha < cutoff 的像素裁剪掉，不写入深度
+                clip(texColor.a - 0.99);
+                return float4(texColor.rgb, 1); // 颜色不重要，Blend 已设置为只写入深度
             }
             ENDCG
         }
-
-        // ── Pass 3：阴影投射（原版保留）────────────────────────────────
+        // ── Pass 4：阴影投射（原版保留）────────────────────────────────
         Pass
         {
             Name "ShadowCaster"
@@ -242,7 +207,7 @@ Shader "Immortal/Spine-Skeleton-ReceiveShadow"
             #include "UnityCG.cginc"
 
             sampler2D _MainTex;
-            fixed     _Cutoff;
+            fixed     _ShadowCutoff;
             float     _ShadowZOffset1;
 
             struct VertexOutput
@@ -263,7 +228,7 @@ Shader "Immortal/Spine-Skeleton-ReceiveShadow"
             float4 frag(VertexOutput i) : SV_Target
             {
                 fixed4 texcol = tex2D(_MainTex, i.uvAndAlpha.xy);
-                clip(texcol.a * i.uvAndAlpha.a - _Cutoff);
+                clip(texcol.a * i.uvAndAlpha.a - _ShadowCutoff);
                 SHADOW_CASTER_FRAGMENT(i)
             }
             ENDCG

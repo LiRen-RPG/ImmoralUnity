@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: skeleton_Material
-  m_Shader: {fileID: 4800000, guid: 1e8a610c9e01c3648bac42585e5fc676, type: 3}
+  m_Name: Female_Material
+  m_Shader: {fileID: 4800000, guid: c522138c122514644adcff37f657148d, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -30,6 +30,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AlphaCutoff: 0
     - _Cutoff: 0.1
     - _Fill: 0
     - _OutlineMipLevel: 0
@@ -37,6 +38,7 @@ Material:
     - _OutlineReferenceTexWidth: 1024
     - _OutlineSmoothness: 1
     - _OutlineWidth: 3
+    - _ShadowCutoff: 0.959
     - _StencilComp: 8
     - _StencilRef: 1
     - _StraightAlphaInput: 0

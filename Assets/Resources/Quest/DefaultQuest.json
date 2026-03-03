@@ -97,7 +97,7 @@
       "personality": 0.5,
       "baseAttack": 1000,
       "baseDefense": 1000,
-      "baseSpeed": 6,
+      "baseSpeed": 1.5,
       "baseCritRate": 1000,
       "baseAccuracy": 1000,
       "appearanceAge": 20
@@ -110,7 +110,7 @@
       "personality": 0.9,
       "baseAttack": 300,
       "baseDefense": 500,
-      "baseSpeed": 8,
+      "baseSpeed": 1.8,
       "baseCritRate": 1500,
       "baseAccuracy": 2000,
       "appearanceAge": 70
@@ -123,7 +123,7 @@
       "personality": 0.8,
       "baseAttack": 800,
       "baseDefense": 700,
-      "baseSpeed": 5,
+      "baseSpeed": 1.2,
       "baseCritRate": 1200,
       "baseAccuracy": 1100,
       "appearanceAge": 40
@@ -136,7 +136,7 @@
       "personality": 0.8,
       "baseAttack": 750,
       "baseDefense": 750,
-      "baseSpeed": 5,
+      "baseSpeed": 1.2,
       "baseCritRate": 1300,
       "baseAccuracy": 1000,
       "appearanceAge": 35
@@ -149,7 +149,7 @@
       "personality": 0.7,
       "baseAttack": 900,
       "baseDefense": 600,
-      "baseSpeed": 6,
+      "baseSpeed": 1.4,
       "baseCritRate": 1100,
       "baseAccuracy": 1200,
       "appearanceAge": 45
@@ -162,7 +162,7 @@
       "personality": 0.6,
       "baseAttack": 2500,
       "baseDefense": 1800,
-      "baseSpeed": 4,
+      "baseSpeed": 1.0,
       "baseCritRate": 900,
       "baseAccuracy": 2000,
       "appearanceAge": 60

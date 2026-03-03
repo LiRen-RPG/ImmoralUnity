@@ -290,8 +290,8 @@ namespace Immortal.Quest
                 return;
             }
 
-            var friendTeam = new List<object>();
-            var enemyTeam  = new List<object>();
+            var friendTeam = new List<Immortal.Controllers.ActorBase>();
+            var enemyTeam  = new List<Immortal.Controllers.ActorBase>();
 
             // 主角（id=0）始终在友方
             if (cultivators.TryGetValue(0, out var playerPair) && playerPair.actorBase != null)

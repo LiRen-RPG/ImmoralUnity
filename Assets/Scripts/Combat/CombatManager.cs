@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Immortal.Controllers;
 
 namespace Immortal.Combat
 {
@@ -16,8 +17,8 @@ namespace Immortal.Combat
         [Header("Combat Settings")]
         [SerializeField] private float updateInterval = 0.1f; // 更新间隔
 
-        private List<object> teamA = new List<object>();  // 队伍A (ActorBase类型)
-        private List<object> teamB = new List<object>();  // 队伍B (ActorBase类型)
+        private List<ActorBase> teamA = new List<ActorBase>();
+        private List<ActorBase> teamB = new List<ActorBase>();
 
         private List<CombatAI> allAIs = new List<CombatAI>();
 
@@ -51,7 +52,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 同时设置两个队伍
         /// </summary>
-        public void SetTeams(object[] teamA, object[] teamB)
+        public void SetTeams(ActorBase[] teamA, ActorBase[] teamB)
         {
             this.teamA = teamA.ToList();
             this.teamB = teamB.ToList();
@@ -94,7 +95,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 从队伍中收集AI组件
         /// </summary>
-        private void CollectAIsFromTeam(List<object> team)
+        private void CollectAIsFromTeam(List<ActorBase> team)
         {
             foreach (var actor in team)
             {
@@ -174,7 +175,7 @@ namespace Immortal.Combat
                 var actor = ai.GetActor();
                 if (actor == null) continue;
 
-                var cultivator = GetActorCultivator(actor);
+                var cultivator = actor?.cultivator;
                 if (cultivator == null) continue;
 
                 float personality = cultivator.personality;
@@ -186,8 +187,8 @@ namespace Immortal.Combat
                     case 0: // 攻击型
                         var aggressiveConfig = new CombatAIConfig
                         {
-                            detectionRange = config.detectionRange + 100f,
-                            attackRange = config.attackRange + 50f,
+                            detectionRange = config.detectionRange + 10f,
+                            attackRange = config.attackRange + 0.5f,
                             retreatHealthThreshold = config.retreatHealthThreshold,
                             fleeHealthThreshold = config.fleeHealthThreshold,
                             supportRange = config.supportRange,
@@ -220,7 +221,7 @@ namespace Immortal.Combat
                             attackRange = config.attackRange,
                             retreatHealthThreshold = config.retreatHealthThreshold,
                             fleeHealthThreshold = config.fleeHealthThreshold,
-                            supportRange = config.supportRange + 100f,
+                            supportRange = config.supportRange + 1f,
                             aggressiveness = Mathf.Max(0.3f, config.aggressiveness - 0.1f),
                             defensiveness = config.defensiveness,
                             teamwork = Mathf.Min(1.0f, config.teamwork + 0.4f)
@@ -271,18 +272,13 @@ namespace Immortal.Combat
         /// <summary>
         /// 检查ActorBase是否活跃
         /// </summary>
-        private bool IsActorActive(object actor)
+        private bool IsActorActive(ActorBase actor)
         {
             if (actor == null) return false;
-
-            // 基于cultivator的生命值判断是否活跃
-            var cultivator = GetActorCultivator(actor);
+            var cultivator = actor.cultivator;
             if (cultivator != null)
-            {
                 return cultivator.currentHealth > 0;
-            }
-
-            return true; // 没有cultivator的默认为活跃
+            return true;
         }
 
         /// <summary>
@@ -352,7 +348,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 获取单个队伍的统计信息
         /// </summary>
-        private TeamStats GetTeamStats(List<object> team)
+        private TeamStats GetTeamStats(List<ActorBase> team)
         {
             var activeActors = team.Where(a => IsActorActive(a)).ToList();
             var aiControlled = activeActors.Where(a => GetActorCombatAI(a) != null).ToList();
@@ -386,57 +382,55 @@ namespace Immortal.Combat
         /// <summary>
         /// 获取玩家控制的单位（没有AI的单位）
         /// </summary>
-        public List<object> GetPlayerControlledUnits()
+        public List<ActorBase> GetPlayerControlledUnits()
         {
             return teamA.Concat(teamB)
-                .Where(actor => IsActorActive(actor) && GetActorCombatAI(actor) == null)
+                .Where(actor => IsActorActive(actor) && actor.GetCombatAI() == null)
                 .ToList();
         }
 
         /// <summary>
         /// 获取指定队伍中的玩家控制单位
         /// </summary>
-        public List<object> GetPlayerControlledUnitsInTeam(bool teamA)
+        public List<ActorBase> GetPlayerControlledUnitsInTeam(bool teamA)
         {
             var team = teamA ? this.teamA : this.teamB;
-            return team.Where(actor => IsActorActive(actor) && GetActorCombatAI(actor) == null).ToList();
+            return team.Where(actor => IsActorActive(actor) && actor.GetCombatAI() == null).ToList();
         }
 
         /// <summary>
         /// 检查某个单位是否为玩家控制
         /// </summary>
-        public bool IsPlayerControlled(object actor)
+        public bool IsPlayerControlled(ActorBase actor)
         {
-            return GetActorCombatAI(actor) == null;
+            return actor?.GetCombatAI() == null;
         }
 
         /// <summary>
         /// 手动激活指定角色的AI
         /// </summary>
-        public void ActivateActorAI(object actor)
+        public void ActivateActorAI(ActorBase actor)
         {
-            var ai = GetActorCombatAI(actor);
+            var ai = actor?.GetCombatAI();
             if (ai != null && !allAIs.Contains(ai))
             {
                 allAIs.Add(ai);
                 ai.ActivateAI();
-                var actorName = GetActorCultivator(actor)?.name ?? "Unknown";
-                Debug.Log($"Manually activated AI for {actorName}");
+                Debug.Log($"Manually activated AI for {actor.cultivator?.name ?? "Unknown"}");
             }
         }
 
         /// <summary>
         /// 手动停用指定角色的AI
         /// </summary>
-        public void DeactivateActorAI(object actor)
+        public void DeactivateActorAI(ActorBase actor)
         {
-            var ai = GetActorCombatAI(actor);
+            var ai = actor?.GetCombatAI();
             if (ai != null)
             {
                 allAIs.Remove(ai);
                 ai.DeactivateAI();
-                var actorName = GetActorCultivator(actor)?.name ?? "Unknown";
-                Debug.Log($"Manually deactivated AI for {actorName}");
+                Debug.Log($"Manually deactivated AI for {actor.cultivator?.name ?? "Unknown"}");
             }
         }
 
@@ -458,7 +452,7 @@ namespace Immortal.Combat
             // 重置所有单位的血量和状态
             foreach (var actor in teamA.Concat(teamB))
             {
-                var cultivator = GetActorCultivator(actor);
+                var cultivator = actor.cultivator;
                 if (cultivator != null)
                 {
                     cultivator.ResetStats();
@@ -469,28 +463,9 @@ namespace Immortal.Combat
             Invoke(nameof(StartBattle), 1.0f);
         }
 
-        // ===== 反射方法辅助函数（避免循环依赖） =====
+        private CombatAI GetActorCombatAI(ActorBase actor) => actor?.GetCombatAI();
 
-        private Core.Cultivator GetActorCultivator(object actor)
-        {
-            if (actor == null) return null;
-            var property = actor.GetType().GetProperty("cultivator");
-            return property?.GetValue(actor) as Core.Cultivator;
-        }
-
-        private CombatAI GetActorCombatAI(object actor)
-        {
-            if (actor == null) return null;
-            var method = actor.GetType().GetMethod("GetCombatAI");
-            return method?.Invoke(actor, null) as CombatAI;
-        }
-
-        private void ActorIdle(object actor)
-        {
-            if (actor == null) return;
-            var method = actor.GetType().GetMethod("Idle");
-            method?.Invoke(actor, null);
-        }
+        private void ActorIdle(ActorBase actor) => actor?.Idle();
 
         // 公共API方法
         public bool IsBattleActive()
@@ -498,14 +473,14 @@ namespace Immortal.Combat
             return battleActive;
         }
 
-        public List<object> GetTeamA()
+        public List<ActorBase> GetTeamA()
         {
-            return new List<object>(teamA);
+            return new List<ActorBase>(teamA);
         }
 
-        public List<object> GetTeamB()
+        public List<ActorBase> GetTeamB()
         {
-            return new List<object>(teamB);
+            return new List<ActorBase>(teamB);
         }
 
         public List<CombatAI> GetAllAIs()

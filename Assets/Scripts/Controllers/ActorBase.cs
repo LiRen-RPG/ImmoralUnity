@@ -14,7 +14,7 @@ namespace Immortal.Controllers
         
         // 血条相关属性
         private ProgressBarController healthBar;
-        private Vector3 healthBarOffset = new Vector3(0, 2.5f, 0); // 血条在角色头顶的偏移
+        private Vector3 healthBarOffset = new Vector3(0, 2.7f, 0); // 血条在角色头顶的偏移
 
         protected Vector3 direction = Vector3.zero;
         public float moveSpeed = 1.4f; // Movement speed (~1.4 m/s, normal human walking speed)
@@ -33,7 +33,9 @@ namespace Immortal.Controllers
         private const float initialColliderHeight = 1.70f;
         protected GameObject shadow;
         protected Vector3 lastVelocity = Vector3.zero;
+        private float lastLoggedSpeed = -1f; // for velocity change logging
         private Camera mainCamera;
+        private MeshRenderer skeletonMeshRenderer;
         
         public Immortal.Core.Cultivator cultivator;
         public Immortal.Item.Inventory inventory;
@@ -52,6 +54,11 @@ namespace Immortal.Controllers
                 skeleton = GetComponent<SkeletonAnimation>();
             if (skeleton == null)
                 skeleton = GetComponentInChildren<SkeletonAnimation>();
+            if (skeleton != null)
+            {
+                skeleton.fixDrawOrder = true;
+                skeletonMeshRenderer = skeleton.GetComponent<MeshRenderer>();
+            }
 
             logicalPosition = transform.position;
             
@@ -62,6 +69,7 @@ namespace Immortal.Controllers
             if (rigidBody != null)
             {
                 rigidBody.interpolation = RigidbodyInterpolation.Interpolate; // Unity equivalent of CCD
+                Debug.Log($"[ActorBase] Rigidbody drag={rigidBody.drag}, angularDrag={rigidBody.angularDrag}");
             }
             
             shadow = transform.Find("shadow")?.gameObject;
@@ -150,7 +158,10 @@ namespace Immortal.Controllers
         /// <param name="factor">速度因子（0.25 = 慢走，0.5 = 快走）</param>
         public void SetSpeedFactor(float factor)
         {
-            moveSpeed = cultivator.currentSpeed * factor;
+            float newSpeed = cultivator.currentSpeed * factor;
+            if (Mathf.Abs(newSpeed - moveSpeed) > 0.01f)
+                Debug.Log($"[SetSpeedFactor] {cultivator?.name}: {moveSpeed:F3} -> {newSpeed:F3} (factor={factor}, currentSpeed={cultivator.currentSpeed})");
+            moveSpeed = newSpeed;
         }
 
         public void Idle(float timeScale = 1.0f)
@@ -184,7 +195,7 @@ namespace Immortal.Controllers
                 }
                 catch (System.ArgumentException e)
                 {
-                    Debug.LogWarning($"[ActorBase] 播放攻击动画失败: {e.Message}");
+                    //Debug.LogWarning($"[ActorBase] 播放攻击动画失败: {e.Message}");
                 }
                 Vector3 position = transform.position;
                 var skillInstance = cultivator.CreateSkillInstance(0);
@@ -282,17 +293,31 @@ namespace Immortal.Controllers
             {
                 lastVelocity = rigidBody.velocity;
             }
+            if (skeletonMeshRenderer != null)
+                skeletonMeshRenderer.sortingOrder = 10000 - (int)(transform.position.z * 100);
 
-            // Handle movement forces
+            // Handle attack animation completion
+            HandleAnimationCompletion();
+        }
+
+        protected virtual void FixedUpdate()
+        {
             if (direction != Vector3.zero && !isJumping && rigidBody != null)
             {
                 Vector3 gravity = Physics.gravity;
                 Vector3 force = direction.normalized * gravity.magnitude * rigidBody.mass;
                 rigidBody.AddForce(force);
+                // Clamp AFTER AddForce in same FixedUpdate — force is applied immediately
+                Vector3 vel = rigidBody.velocity;
+                Vector3 horizontal = new Vector3(vel.x, 0, vel.z);
+                float hSpeed = horizontal.magnitude;
+                if (hSpeed > moveSpeed)
+                {
+                    horizontal = horizontal.normalized * moveSpeed;
+                    rigidBody.velocity = new Vector3(horizontal.x, vel.y, horizontal.z);
+                    hSpeed = moveSpeed;
+                }
             }
-
-            // Handle attack animation completion
-            HandleAnimationCompletion();
         }
 
         protected virtual void LateUpdate()

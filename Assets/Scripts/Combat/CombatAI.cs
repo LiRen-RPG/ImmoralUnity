@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Immortal.Controllers;
 
 namespace Immortal.Combat
 {
@@ -22,11 +23,11 @@ namespace Immortal.Combat
     [System.Serializable]
     public class CombatAIConfig
     {
-        public float detectionRange = 2000f;     // 检测范围
-        public float attackRange = 400f;         // 攻击范围
+        public float detectionRange = 100f;     // 检测范围
+        public float attackRange = 2f;         // 攻击范围
         public float retreatHealthThreshold = 0.3f; // 撤退血量阈值
         public float fleeHealthThreshold = 0.15f;    // 逃跑血量阈值
-        public float supportRange = 400f;        // 支援范围
+        public float supportRange = 4f;        // 支援范围
         public float aggressiveness = 0.7f;      // 攻击性 (0-1)
         public float defensiveness = 0.5f;       // 防御性 (0-1)
         public float teamwork = 0.6f;           // 团队协作性 (0-1)
@@ -36,10 +37,10 @@ namespace Immortal.Combat
     public class CombatDecision
     {
         public string action;
-        public object target;        // ActorBase类型，使用object避免循环依赖
+        public Immortal.Controllers.ActorBase target;
         public Vector3? direction;
         public float duration;
-        public float speedFactor = 1f; // 速度因子
+        public float speedFactor = 0.6f; // 速度因子（默认巡逻/支援速度）
 
         public CombatDecision(string action)
         {
@@ -49,7 +50,7 @@ namespace Immortal.Combat
 
     public class CombatAI
     {
-        private object actor; // ActorBase类型，使用object避免循环依赖
+        private ActorBase actor;
         private CombatState currentState = CombatState.IDLE;
         private CombatState previousState = CombatState.IDLE;
         private float stateTimer = 0f;
@@ -62,15 +63,15 @@ namespace Immortal.Combat
         private CombatAIConfig config = new CombatAIConfig();
 
         // 战斗单位列表
-        private List<object> allies = new List<object>(); // List<ActorBase>
-        private List<object> enemies = new List<object>(); // List<ActorBase>
-        private object currentTarget = null; // ActorBase类型
+        private List<ActorBase> allies = new List<ActorBase>();
+        private List<ActorBase> enemies = new List<ActorBase>();
+        private ActorBase currentTarget = null;
 
         // AI状态存储
-        private Dictionary<object, float> threatLevels = new Dictionary<object, float>();
+        private Dictionary<ActorBase, float> threatLevels = new Dictionary<ActorBase, float>();
 
         // 仇恨值系统
-        private Dictionary<object, float> hatredLevels = new Dictionary<object, float>();
+        private Dictionary<ActorBase, float> hatredLevels = new Dictionary<ActorBase, float>();
         private float maxHatred = 100f; // 最大仇恨值
         private float hatredDecayRate = 1f; // 每秒仇恨值衰减
 
@@ -79,7 +80,7 @@ namespace Immortal.Combat
         private int currentPatrolIndex = 0;
         private float patrolRadius = 300f;
 
-        public CombatAI(object actor)
+        public CombatAI(ActorBase actor)
         {
             this.actor = actor;
 
@@ -90,7 +91,7 @@ namespace Immortal.Combat
             AdjustConfigByPersonality();
         }
 
-        public object GetActor()
+        public ActorBase GetActor()
         {
             return actor;
         }
@@ -143,7 +144,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 更新战斗单位信息
         /// </summary>
-        public void UpdateCombatUnits(List<object> allies, List<object> enemies)
+        public void UpdateCombatUnits(List<ActorBase> allies, List<ActorBase> enemies)
         {
             this.allies = allies.Where(actor => IsActorActive(actor)).ToList();
             this.enemies = enemies.Where(actor => IsActorActive(actor)).ToList();
@@ -155,7 +156,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 检查ActorBase是否活跃
         /// </summary>
-        private bool IsActorActive(object actor)
+        private bool IsActorActive(ActorBase actor)
         {
             if (actor == null) return false;
 
@@ -172,7 +173,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 获取ActorBase的生命值比例
         /// </summary>
-        private float GetHealthRatio(object actor)
+        private float GetHealthRatio(ActorBase actor)
         {
             var cultivator = GetActorCultivator(actor);
             if (cultivator == null) return 1.0f;
@@ -231,8 +232,8 @@ namespace Immortal.Combat
             }
 
             // 移除已死亡或不活跃的敌人的仇恨值
-            var activeEnemies = new HashSet<object>(enemies);
-            var toRemove = new List<object>();
+            var activeEnemies = new HashSet<ActorBase>(enemies);
+            var toRemove = new List<ActorBase>();
             foreach (var kvp in hatredLevels)
             {
                 if (!activeEnemies.Contains(kvp.Key) || !IsActorActive(kvp.Key))
@@ -249,7 +250,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 增加对特定敌人的仇恨值
         /// </summary>
-        public void AddHatred(object enemy, float amount)
+        public void AddHatred(ActorBase enemy, float amount)
         {
             if (enemy == null || !IsActorActive(enemy)) return;
 
@@ -265,7 +266,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 获取对特定敌人的仇恨值
         /// </summary>
-        public float GetHatred(object enemy)
+        public float GetHatred(ActorBase enemy)
         {
             return hatredLevels.ContainsKey(enemy) ? hatredLevels[enemy] : 0f;
         }
@@ -273,31 +274,11 @@ namespace Immortal.Combat
         /// <summary>
         /// 计算追击速度因子
         /// </summary>
-        private float CalculateChaseSpeedFactor(object enemy)
+        private float CalculateChaseSpeedFactor(ActorBase enemy)
         {
-            float distance = Vector3.Distance(GetActorPosition(actor), GetActorPosition(enemy));
             float hatred = GetHatred(enemy);
-
-            // 基础速度因子
-            float speedFactor = 0.3f; // 基础30%速度
-
-            // 距离因子：距离越远，速度越快
-            float maxChaseDistance = config.detectionRange;
-            float distanceFactor = Mathf.Min(1.5f, distance / (maxChaseDistance * 0.5f)); // 距离超过检测范围一半时开始加速
-
-            // 仇恨因子：仇恨值越高，速度越快
-            float hatredFactor = 1f + (hatred / maxHatred) * 0.8f; // 最高仇恨时额外80%速度
-
-            // 性格影响：攻击性越强，追击速度越快
-            float personalityFactor = 1f + config.aggressiveness * 0.3f;
-
-            // 计算最终速度因子
-            speedFactor = speedFactor * distanceFactor * hatredFactor * personalityFactor;
-
-            // 限制在合理范围内
-            speedFactor = Mathf.Clamp(speedFactor, 0.2f, 2.0f);
-
-            return speedFactor;
+            // 仇恨值越高速度越快：0仇恨=0.8，满仇恨=1.0
+            return Mathf.Lerp(0.8f, 1.0f, hatred / maxHatred);
         }
 
         /// <summary>
@@ -340,8 +321,8 @@ namespace Immortal.Combat
         private CombatDecision AnalyzeAndDecide()
         {
             float myHealth = GetCurrentHealthRatio();
-            object nearestEnemy = FindNearestEnemy();
-            object nearestAlly = FindNearestAlly();
+            ActorBase nearestEnemy = FindNearestEnemy();
+            ActorBase nearestAlly = FindNearestAlly();
 
             // 检查是否需要逃跑
             if (myHealth < config.fleeHealthThreshold)
@@ -358,7 +339,7 @@ namespace Immortal.Combat
             // 检查是否需要支援队友
             if (config.teamwork > 0.5f)
             {
-                object allyNeedsHelp = FindAllyNeedingHelp();
+                ActorBase allyNeedsHelp = FindAllyNeedingHelp();
                 if (allyNeedsHelp != null)
                 {
                     return DecideSupport(allyNeedsHelp);
@@ -394,14 +375,15 @@ namespace Immortal.Combat
 
             return new CombatDecision("flee")
             {
-                direction = fleeDirection
+                direction = fleeDirection,
+                speedFactor = 0.8f
             };
         }
 
         /// <summary>
         /// 决定撤退
         /// </summary>
-        private CombatDecision DecideRetreat(object enemy)
+        private CombatDecision DecideRetreat(ActorBase enemy)
         {
             Vector3 retreatDirection = CalculateRetreatDirection(enemy);
             ChangeState(CombatState.RETREAT);
@@ -409,14 +391,15 @@ namespace Immortal.Combat
             return new CombatDecision("retreat")
             {
                 direction = retreatDirection,
-                target = enemy
+                target = enemy,
+                speedFactor = 0.8f
             };
         }
 
         /// <summary>
         /// 决定支援队友
         /// </summary>
-        private CombatDecision DecideSupport(object ally)
+        private CombatDecision DecideSupport(ActorBase ally)
         {
             ChangeState(CombatState.SUPPORT);
 
@@ -431,7 +414,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 决定攻击
         /// </summary>
-        private CombatDecision DecideAttack(object enemy)
+        private CombatDecision DecideAttack(ActorBase enemy)
         {
             ChangeState(CombatState.ATTACK);
             currentTarget = enemy;
@@ -445,7 +428,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 决定追击
         /// </summary>
-        private CombatDecision DecideChase(object enemy)
+        private CombatDecision DecideChase(ActorBase enemy)
         {
             ChangeState(CombatState.CHASE);
             currentTarget = enemy;
@@ -521,7 +504,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 执行攻击
         /// </summary>
-        private void ExecuteAttack(object target)
+        private void ExecuteAttack(ActorBase target)
         {
             if (target == null) return;
 
@@ -548,11 +531,13 @@ namespace Immortal.Combat
                     break;
 
                 case CombatState.ATTACK:
-                    // 攻击状态下保持面向目标
+                    // 攻击状态向目标走动并保持面向
                     if (currentTarget != null)
                     {
-                        Vector3 direction = GetActorPosition(currentTarget) - GetActorPosition(actor);
+                        Vector3 direction = (GetActorPosition(currentTarget) - GetActorPosition(actor));
                         SetActorOrientation(actor, direction.x > 0 ? 1 : -1);
+                        // 向目标方向移动
+                        ActorWalk(actor, direction.normalized);
                     }
                     break;
             }
@@ -644,11 +629,11 @@ namespace Immortal.Combat
         /// <summary>
         /// 查找最近的敌人（考虑仇恨值）
         /// </summary>
-        private object FindNearestEnemy()
+        private ActorBase FindNearestEnemy()
         {
             if (enemies.Count == 0) return null;
 
-            object bestTarget = null;
+            ActorBase bestTarget = null;
             float bestScore = -1f;
 
             foreach (var enemy in enemies)
@@ -677,11 +662,11 @@ namespace Immortal.Combat
         /// <summary>
         /// 查找最近的队友
         /// </summary>
-        private object FindNearestAlly()
+        private ActorBase FindNearestAlly()
         {
             if (allies.Count == 0) return null;
 
-            object nearest = null;
+            ActorBase nearest = null;
             float minDistance = float.MaxValue;
 
             foreach (var ally in allies)
@@ -700,7 +685,7 @@ namespace Immortal.Combat
         /// <summary>
         /// 查找需要帮助的队友
         /// </summary>
-        private object FindAllyNeedingHelp()
+        private ActorBase FindAllyNeedingHelp()
         {
             foreach (var ally in allies)
             {
@@ -746,12 +731,12 @@ namespace Immortal.Combat
         /// <summary>
         /// 计算撤退方向
         /// </summary>
-        private Vector3 CalculateRetreatDirection(object enemy)
+        private Vector3 CalculateRetreatDirection(ActorBase enemy)
         {
             Vector3 retreatDirection = (GetActorPosition(actor) - GetActorPosition(enemy)).normalized;
 
             // 寻找最近的队友位置作为撤退目标
-            object nearestAlly = FindNearestAlly();
+            ActorBase nearestAlly = FindNearestAlly();
             if (nearestAlly != null)
             {
                 Vector3 allyDirection = (GetActorPosition(nearestAlly) - GetActorPosition(actor)).normalized;
@@ -832,9 +817,9 @@ namespace Immortal.Combat
         /// <summary>
         /// 获取当前仇恨值列表（用于调试）
         /// </summary>
-        public Dictionary<object, float> GetHatredLevels()
+        public Dictionary<ActorBase, float> GetHatredLevels()
         {
-            return new Dictionary<object, float>(hatredLevels);
+            return new Dictionary<ActorBase, float>(hatredLevels);
         }
 
         /// <summary>
@@ -859,78 +844,22 @@ namespace Immortal.Combat
             return $"状态: {currentState} | 目标: {target} | 仇恨值: {hatred} | 速度因子: {speedFactor:F2}";
         }
 
-        // ===== 反射方法辅助函数（避免循环依赖） =====
-        
-        private Core.Cultivator GetActorCultivator(object actor)
-        {
-            if (actor == null) return null;
-            var property = actor.GetType().GetProperty("cultivator");
-            return property?.GetValue(actor) as Core.Cultivator;
-        }
+        // ===== ActorBase 直接调用辅助函数 =====
 
-        private Vector3 GetActorPosition(object actor)
-        {
-            if (actor == null) return Vector3.zero;
-            
-            // 尝试获取Transform组件
-            var nodeProperty = actor.GetType().GetProperty("transform");
-            if (nodeProperty != null)
-            {
-                var transform = nodeProperty.GetValue(actor) as Transform;
-                return transform?.position ?? Vector3.zero;
-            }
+        private Core.Cultivator GetActorCultivator(ActorBase actor) => actor?.cultivator;
 
-            // 备用方法：尝试获取GameObject
-            var gameObjectProperty = actor.GetType().GetProperty("gameObject");
-            if (gameObjectProperty != null)
-            {
-                var gameObject = gameObjectProperty.GetValue(actor) as GameObject;
-                return gameObject?.transform.position ?? Vector3.zero;
-            }
+        private Vector3 GetActorPosition(ActorBase actor) => actor?.transform.position ?? Vector3.zero;
 
-            return Vector3.zero;
-        }
+        private CombatAI GetActorCombatAI(ActorBase actor) => actor?.GetCombatAI();
 
-        private CombatAI GetActorCombatAI(object actor)
-        {
-            if (actor == null) return null;
-            var method = actor.GetType().GetMethod("GetCombatAI");
-            return method?.Invoke(actor, null) as CombatAI;
-        }
+        private void SetActorSpeedFactor(ActorBase actor, float speedFactor) => actor?.SetSpeedFactor(speedFactor);
 
-        private void SetActorSpeedFactor(object actor, float speedFactor)
-        {
-            if (actor == null) return;
-            var method = actor.GetType().GetMethod("SetSpeedFactor");
-            method?.Invoke(actor, new object[] { speedFactor });
-        }
+        private void ActorWalk(ActorBase actor, Vector3 direction) => actor?.Walk(direction);
 
-        private void ActorWalk(object actor, Vector3 direction)
-        {
-            if (actor == null) return;
-            var method = actor.GetType().GetMethod("Walk");
-            method?.Invoke(actor, new object[] { direction });
-        }
+        private void SetActorOrientation(ActorBase actor, int orientation) => actor?.SetOrientation(orientation);
 
-        private void SetActorOrientation(object actor, int orientation)
-        {
-            if (actor == null) return;
-            var method = actor.GetType().GetMethod("SetOrientation");
-            method?.Invoke(actor, new object[] { orientation });
-        }
+        private void ActorAttack(ActorBase actor) => actor?.Attack(null);
 
-        private void ActorAttack(object actor)
-        {
-            if (actor == null) return;
-            var method = actor.GetType().GetMethod("Attack");
-            method?.Invoke(actor, new object[] { (object)null });
-        }
-
-        private void ActorIdle(object actor)
-        {
-            if (actor == null) return;
-            var method = actor.GetType().GetMethod("Idle");
-            method?.Invoke(actor, null);
-        }
+        private void ActorIdle(ActorBase actor) => actor?.Idle();
     }
 }

@@ -70,10 +70,11 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AlphaCutoff: 0
     - _BumpScale: 1
     - _CanvasGroupCompatible: 1
     - _ColorMask: 15
-    - _Cutoff: 1
+    - _Cutoff: 0.134
     - _DarkColorAlphaAdditive: 0
     - _DetailNormalMapScale: 1
     - _DoubleSidedLighting: 0
@@ -94,6 +95,7 @@ Material:
     - _OutlineWidth: 3
     - _Parallax: 0.02
     - _ShadowAlphaCutoff: 0.1
+    - _ShadowCutoff: 0.979
     - _ShadowStrength: 1
     - _ShadowZBias: -0.0032
     - _ShadowZOffset: -0
