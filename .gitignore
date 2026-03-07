@@ -2,6 +2,9 @@
 #
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 
+# AI-generated source images (large files, not tracked in VCS)
+/AIGenerated/
+
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -85,3 +88,4 @@ Thumbs.db
 
 # VS Code
 .vscode/
+PythonScripts/__pycache__/

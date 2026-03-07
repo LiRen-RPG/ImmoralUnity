@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Immortal.Item;
+using Immortal.Utils;
 
 namespace Immortal.UI
 {
@@ -74,8 +75,7 @@ namespace Immortal.UI
                 itemIcon.enabled = hasItem;
                 if (hasItem)
                 {
-                    // icon 字段存放的是 Resources 路径；实际项目可改为 Sprite 引用
-                    var sprite = LoadIconSprite(item.icon);
+                    var sprite = IconManager.GetInstance().LoadItemIconSync(item);
                     itemIcon.sprite = sprite;
                 }
             }

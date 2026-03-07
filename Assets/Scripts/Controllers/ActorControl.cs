@@ -77,12 +77,17 @@ namespace Immortal.Controllers
 
         private void AddExampleItems()
         {
-            // 添加示例物品（这里需要根据实际的Item系统实现）
             var inventory = actorBase.GetInventory();
-            
-            // 示例：添加一些基础物品
-            // InventoryUtils.AddItem(inventory, exampleItems[i], 1);
-            // 具体实现取决于Item系统的完整转换
+            var iconManager = Immortal.Utils.IconManager.GetInstance();
+
+            // 初始背包：所有丹药各 3 粒
+            var allPills = ItemDatabase.GetByType(ItemType.Pill);
+            foreach (var item in allPills)
+            {
+                inventory.AddItem(item, 3);
+                iconManager.LoadItemIconSync(item);
+            }
+            Debug.Log($"[ActorControl] 已添加全部 {allPills.Count} 种丹药各 3 粒");
         }
 
         private void CreateAndAddFormations()

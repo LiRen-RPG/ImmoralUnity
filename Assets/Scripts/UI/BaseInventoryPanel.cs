@@ -97,6 +97,9 @@ namespace Immortal.UI
         protected virtual void OnInventoryChanged(InventoryEvent evt)
         {
             RefreshSlot(evt.slotIndex);
+            // 移动操作需同时刷新来源槽位，否则源槽位视觉上不清空
+            if (evt.type == InventoryEventType.ItemMoved && evt.fromSlot >= 0)
+                RefreshSlot(evt.fromSlot);
         }
 
         protected void RefreshSlot(int index)

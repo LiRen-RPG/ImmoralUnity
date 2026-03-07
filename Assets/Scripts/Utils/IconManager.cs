@@ -34,7 +34,7 @@ namespace Immortal.Utils
 
         /// <summary>
         /// 获取物品图标路径
-        /// 优先使用icon字段，否则使用默认图标
+        /// 优先使用icon字段，否则按类型自动推断路径，最终回退到默认图标
         /// </summary>
         public string GetItemIconPath(BaseItem item)
         {
@@ -42,6 +42,12 @@ namespace Immortal.Utils
             if (!string.IsNullOrEmpty(item.icon))
             {
                 return item.icon;
+            }
+
+            // 丹药：图标位于 Resources/Icons/Pills/<id>
+            if (item.type == ItemType.Pill)
+            {
+                return $"Icons/Pills/{item.id}";
             }
 
             // 使用默认图标

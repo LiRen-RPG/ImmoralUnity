@@ -45,6 +45,7 @@ namespace Immortal.Item
         public bool stackable = true;
         public int maxStack = 99;
         public FivePhases? phase; // 五行属性
+        public CultivationRealm? requiredRealm; // 需要的修仙境界
 
         protected BaseItem()
         {
@@ -152,6 +153,8 @@ namespace Immortal.Item
     {
         public float restoreHp;
         public float restoreMp;
+        public float restoreCultivation; // 恢复/增加修为值
+        public float breakthroughBonus;  // 突破境界成功率加成（0~1）
         public string buff; // 增益效果
         public float duration;
 
@@ -161,12 +164,15 @@ namespace Immortal.Item
         }
 
         public PillItem(string id, string name, ItemRarity rarity, float restoreHp = 0, float restoreMp = 0,
+                       float restoreCultivation = 0, float breakthroughBonus = 0,
                        string buff = "", float duration = 0, string description = "", string icon = "",
                        bool stackable = true, int maxStack = 99, FivePhases? phase = null)
             : base(id, name, ItemType.Pill, rarity, description, icon, stackable, maxStack, phase)
         {
             this.restoreHp = restoreHp;
             this.restoreMp = restoreMp;
+            this.restoreCultivation = restoreCultivation;
+            this.breakthroughBonus = breakthroughBonus;
             this.buff = buff;
             this.duration = duration;
         }
@@ -300,81 +306,6 @@ namespace Immortal.Item
         {
             this.formationLevel = formationLevel;
             this.requiredElements = requiredElements ?? new List<FivePhases>();
-        }
-    }
-
-    // 物品工厂类
-    public static class ItemFactory
-    {
-        public static BaseItem CreateItem(ItemType type, string id, string name, ItemRarity rarity)
-        {
-            switch (type)
-            {
-                case ItemType.Ammo:
-                    return new AmmoItem(id, name, rarity, 10f, new List<string>());
-                case ItemType.Weapon:
-                    return new WeaponItem(id, name, rarity, 50f, 10f);
-                case ItemType.Talisman:
-                    return new TalismanItem(id, name, rarity, "基础效果");
-                case ItemType.Pill:
-                    return new PillItem(id, name, rarity, 50f);
-                case ItemType.Material:
-                    return new MaterialItem(id, name, rarity);
-                case ItemType.Book:
-                    return new BookItem(id, name, rarity, "基础技能", BookItem.SkillType.Active);
-                case ItemType.Treasure:
-                    return new TreasureItem(id, name, rarity, 100f);
-                case ItemType.Tool:
-                    return new ToolItem(id, name, rarity, 1f, 100f);
-                case ItemType.Quest:
-                    return new QuestItem(id, name, "");
-                case ItemType.Formation:
-                    return new FormationItem(id, name, rarity, 1, new List<FivePhases>());
-                default:
-                    throw new ArgumentException($"Unknown item type: {type}");
-            }
-        }
-    }
-
-    // 物品统计信息
-    [System.Serializable]
-    public class ItemStatistics
-    {
-        public Dictionary<ItemType, int> typeCount;
-        public Dictionary<ItemRarity, int> rarityCount;
-        public int totalItems;
-
-        public ItemStatistics()
-        {
-            typeCount = new Dictionary<ItemType, int>();
-            rarityCount = new Dictionary<ItemRarity, int>();
-            totalItems = 0;
-        }
-
-        public void AddItem(BaseItem item)
-        {
-            if (typeCount.ContainsKey(item.type))
-                typeCount[item.type]++;
-            else
-                typeCount[item.type] = 1;
-
-            if (rarityCount.ContainsKey(item.rarity))
-                rarityCount[item.rarity]++;
-            else
-                rarityCount[item.rarity] = 1;
-
-            totalItems++;
-        }
-
-        public void RemoveItem(BaseItem item)
-        {
-            if (typeCount.ContainsKey(item.type) && typeCount[item.type] > 0)
-                typeCount[item.type]--;
-
-            if (rarityCount.ContainsKey(item.rarity) && rarityCount[item.rarity] > 0)
-                rarityCount[item.rarity]--;
-
-            totalItems--;
         }
     }
 }

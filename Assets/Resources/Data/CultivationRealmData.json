@@ -1,0 +1,92 @@
+{
+  "realms": [
+    {
+      "realm": 0,
+      "chineseName": "练气",
+      "lifespan": 200,
+      "attackMultiplier": 1.0,
+      "defenseMultiplier": 1.0,
+      "speedMultiplier": 1.0,
+      "healthMultiplier": 1.0,
+      "critRateBonus": 0.00,
+      "accuracyBonus": 0.00
+    },
+    {
+      "realm": 1,
+      "chineseName": "筑基",
+      "lifespan": 500,
+      "attackMultiplier": 1.5,
+      "defenseMultiplier": 1.5,
+      "speedMultiplier": 1.2,
+      "healthMultiplier": 1.5,
+      "critRateBonus": 0.02,
+      "accuracyBonus": 0.02
+    },
+    {
+      "realm": 2,
+      "chineseName": "金丹",
+      "lifespan": 1000,
+      "attackMultiplier": 2.5,
+      "defenseMultiplier": 2.5,
+      "speedMultiplier": 1.5,
+      "healthMultiplier": 2.5,
+      "critRateBonus": 0.05,
+      "accuracyBonus": 0.05
+    },
+    {
+      "realm": 3,
+      "chineseName": "元婴",
+      "lifespan": 2000,
+      "attackMultiplier": 5.0,
+      "defenseMultiplier": 5.0,
+      "speedMultiplier": 2.0,
+      "healthMultiplier": 5.0,
+      "critRateBonus": 0.08,
+      "accuracyBonus": 0.08
+    },
+    {
+      "realm": 4,
+      "chineseName": "化神",
+      "lifespan": 5000,
+      "attackMultiplier": 10.0,
+      "defenseMultiplier": 10.0,
+      "speedMultiplier": 3.0,
+      "healthMultiplier": 10.0,
+      "critRateBonus": 0.12,
+      "accuracyBonus": 0.12
+    },
+    {
+      "realm": 5,
+      "chineseName": "返虚",
+      "lifespan": 10000,
+      "attackMultiplier": 20.0,
+      "defenseMultiplier": 20.0,
+      "speedMultiplier": 5.0,
+      "healthMultiplier": 20.0,
+      "critRateBonus": 0.16,
+      "accuracyBonus": 0.16
+    },
+    {
+      "realm": 6,
+      "chineseName": "渡劫",
+      "lifespan": 50000,
+      "attackMultiplier": 50.0,
+      "defenseMultiplier": 50.0,
+      "speedMultiplier": 10.0,
+      "healthMultiplier": 50.0,
+      "critRateBonus": 0.20,
+      "accuracyBonus": 0.20
+    },
+    {
+      "realm": 7,
+      "chineseName": "大乘",
+      "lifespan": 3.402823e+38,
+      "attackMultiplier": 200.0,
+      "defenseMultiplier": 200.0,
+      "speedMultiplier": 30.0,
+      "healthMultiplier": 200.0,
+      "critRateBonus": 0.30,
+      "accuracyBonus": 0.30
+    }
+  ]
+}

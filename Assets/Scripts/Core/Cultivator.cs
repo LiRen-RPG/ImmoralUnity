@@ -284,11 +284,18 @@ namespace Immortal.Core
         public object actorBase = null; // 可选：类型可指定为ActorBase，避免循环依赖可用object或接口
         public float appearanceAge;
 
+        // 修仙境界
+        public CultivationRealm cultivationRealm;
+        public float age;        // 当前年龄
+        public float lifespan;   // 当前境界寿命上限
+
         public Cultivator()
         {
             // 用于反序列化
             activeDebuffs = new List<Debuff>();
             skills = new List<Skill>();
+            cultivationRealm = CultivationRealm.QiRefining;
+            lifespan = CultivationRealmUtils.GetLifespan(cultivationRealm);
         }
 
         public Cultivator(
@@ -301,30 +308,37 @@ namespace Immortal.Core
             float accuracy,
             Gender gender = Gender.Male,
             float personality = 0.5f,
-            float appearanceAge = 20f) // 外观年龄，默认为20
+            float appearanceAge = 20f,
+            CultivationRealm cultivationRealm = CultivationRealm.QiRefining,
+            float age = 0f)
         {
             this.name = name;
             this.element = element;
             this.gender = gender;
             this.personality = Mathf.Clamp01(personality); // 确保在0-1范围内
 
-            // 初始化基础属性
+            // 初始化基础属性（原始值，不含境界加成）
             this.baseAttack = attack;
             this.baseDefense = defense;
             this.baseSpeed = speed;
             this.baseCritRate = critRate;
             this.baseAccuracy = accuracy;
+            this.appearanceAge = appearanceAge;
 
-            // 初始化当前属性
+            // 初始化境界
+            this.cultivationRealm = cultivationRealm;
+            this.age = age;
+            this.lifespan = CultivationRealmUtils.GetLifespan(cultivationRealm);
+
+            // 初始化当前属性（原始值，不含境界加成）
             this.currentAttack = attack;
             this.currentDefense = defense;
             this.currentSpeed = speed;
             this.currentCritRate = critRate;
             this.currentAccuracy = accuracy;
-            this.appearanceAge = appearanceAge;
 
-            // 初始化生命值系统
-            this.maxHealth = defense * 10; // 最大生命值为防御力的10倍
+            // 初始化生命值和寿命（由境界决定上限）
+            this.maxHealth = defense * 10f * CultivationRealmUtils.GetRealmInfo(cultivationRealm).healthMultiplier;
             this.currentHealth = this.maxHealth;
             this.isAlive = true;
 
@@ -353,7 +367,17 @@ namespace Immortal.Core
             this.skills.Add(this.defaultSkill);
         }
 
-        // 重置当前属性为原始值
+        // 仅更新境界相关的寿命和生命值上限，不干预战斗属性
+        public void ApplyRealmBonus()
+        {
+            var info = CultivationRealmUtils.GetRealmInfo(this.cultivationRealm);
+            this.lifespan = info.lifespan;
+            float healthPercent = this.maxHealth > 0 ? this.currentHealth / this.maxHealth : 1f;
+            this.maxHealth = this.baseDefense * 10f * info.healthMultiplier;
+            this.currentHealth = this.maxHealth * healthPercent;
+        }
+
+        // 重置当前战斗属性为基础原始值（清除 debuff），保持境界不变
         public void ResetStats()
         {
             this.currentAttack = this.baseAttack;
@@ -361,6 +385,37 @@ namespace Immortal.Core
             this.currentSpeed = this.baseSpeed;
             this.currentCritRate = this.baseCritRate;
             this.currentAccuracy = this.baseAccuracy;
+        }
+
+        /// <summary>
+        /// 晋升到下一境界。返回是否晋升成功。
+        /// </summary>
+        public bool AdvanceRealm()
+        {
+            if (!CultivationRealmUtils.CanAdvance(this.cultivationRealm))
+            {
+                Debug.Log($"{this.name} 已达到最高境界：{CultivationRealmUtils.GetChineseName(this.cultivationRealm)}");
+                return false;
+            }
+
+            CultivationRealm oldRealm = this.cultivationRealm;
+            this.cultivationRealm = CultivationRealmUtils.GetNextRealm(this.cultivationRealm);
+
+            // 只更新寿命和生命值上限，保留生命值百分比
+            ApplyRealmBonus();
+
+            Debug.Log($"{this.name} 突破境界！{CultivationRealmUtils.GetChineseName(oldRealm)} → {CultivationRealmUtils.GetChineseName(this.cultivationRealm)}，寿命上限：{this.lifespan}年");
+            return true;
+        }
+
+        /// <summary>
+        /// 直接设置境界（用于初始化或存档加载）。
+        /// </summary>
+        public void SetRealm(CultivationRealm realm)
+        {
+            this.cultivationRealm = realm;
+            // 只更新寿命和生命值上限，保留生命值百分比
+            ApplyRealmBonus();
         }
 
         public SkillInstance CreateSkillInstance(int skillIndex = 0)
@@ -464,7 +519,9 @@ namespace Immortal.Core
         {
             int healthPercent = Mathf.FloorToInt(GetHealthPercentage() * 100);
             string status = this.isAlive ? "存活" : "死亡";
-            return $"{this.name} ({FivePhasesUtils.GetName(this.element)}): {status} - 生命值: {this.currentHealth}/{this.maxHealth} ({healthPercent}%)";
+            string realmName = CultivationRealmUtils.GetChineseName(this.cultivationRealm);
+            string lifespanStr = this.lifespan >= float.MaxValue ? "无限" : $"{this.lifespan}年";
+            return $"{this.name} [{realmName}] ({FivePhasesUtils.GetName(this.element)}): {status} - 生命值: {this.currentHealth}/{this.maxHealth} ({healthPercent}%) - 寿命: {lifespanStr}";
         }
 
         /// <summary>
@@ -483,7 +540,10 @@ namespace Immortal.Core
                 data.baseCritRate,
                 data.baseAccuracy,
                 (Gender)data.gender,
-                data.personality
+                data.personality,
+                data.appearanceAge,
+                (CultivationRealm)data.cultivationRealm,
+                data.age
             );
         }
 
@@ -502,7 +562,10 @@ namespace Immortal.Core
                 baseDefense = this.baseDefense,
                 baseSpeed = this.baseSpeed,
                 baseCritRate = this.baseCritRate,
-                baseAccuracy = this.baseAccuracy
+                baseAccuracy = this.baseAccuracy,
+                appearanceAge = this.appearanceAge,
+                cultivationRealm = (int)this.cultivationRealm,
+                age = this.age
             };
             return JsonConvert.SerializeObject(data);
         }
@@ -523,5 +586,7 @@ namespace Immortal.Core
         public float baseCritRate;
         public float baseAccuracy;
         public float appearanceAge;
+        public int cultivationRealm; // 境界（对应 CultivationRealm 枚举）
+        public float age;            // 当前年龄
     }
 }

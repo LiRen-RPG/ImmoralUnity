@@ -1,0 +1,604 @@
+﻿{
+  "items": [
+    {
+      "id": "pill_recovery_qirefining_metal", "name": "金气培元丹",
+      "rarity": 0, "phase": 0, "requiredRealm": 0,
+      "restoreHp": 100, "restoreMp": 50, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "以金属灵气炼制，可恢复少量气血，练气期修士常备。"
+    },
+    {
+      "id": "pill_recovery_qirefining_wood", "name": "木气培元丹",
+      "rarity": 0, "phase": 1, "requiredRealm": 0,
+      "restoreHp": 100, "restoreMp": 50, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "以木系灵气炼制，蕴含生机，可恢复少量气血，练气期修士常备。"
+    },
+    {
+      "id": "pill_recovery_qirefining_water", "name": "水气培元丹",
+      "rarity": 0, "phase": 2, "requiredRealm": 0,
+      "restoreHp": 100, "restoreMp": 50, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "以水系灵气炼制，清凉滋润，可恢复少量气血，练气期修士常备。"
+    },
+    {
+      "id": "pill_recovery_qirefining_fire", "name": "火气培元丹",
+      "rarity": 0, "phase": 3, "requiredRealm": 0,
+      "restoreHp": 100, "restoreMp": 50, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "以火系灵气炼制，温热行气，可恢复少量气血，练气期修士常备。"
+    },
+    {
+      "id": "pill_recovery_qirefining_earth", "name": "土气培元丹",
+      "rarity": 0, "phase": 4, "requiredRealm": 0,
+      "restoreHp": 100, "restoreMp": 50, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "以土系灵气炼制，厚重稳固，可恢复少量气血，练气期修士常备。"
+    },
+    {
+      "id": "pill_recovery_foundation_metal", "name": "金气固基丹",
+      "rarity": 1, "phase": 0, "requiredRealm": 1,
+      "restoreHp": 500, "restoreMp": 250, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "金属之气凝练，可大幅恢复气血，筑基期修士常备。"
+    },
+    {
+      "id": "pill_recovery_foundation_wood", "name": "木气固基丹",
+      "rarity": 1, "phase": 1, "requiredRealm": 1,
+      "restoreHp": 500, "restoreMp": 250, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "灵木之气凝练，蕴含盎然生机，可大幅恢复气血，筑基期修士常备。"
+    },
+    {
+      "id": "pill_recovery_foundation_water", "name": "水气固基丹",
+      "rarity": 1, "phase": 2, "requiredRealm": 1,
+      "restoreHp": 500, "restoreMp": 250, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "寒水之气凝练，清灵滋养，可大幅恢复气血，筑基期修士常备。"
+    },
+    {
+      "id": "pill_recovery_foundation_fire", "name": "火气固基丹",
+      "rarity": 1, "phase": 3, "requiredRealm": 1,
+      "restoreHp": 500, "restoreMp": 250, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "烈火之气凝练，驱散阴寒，可大幅恢复气血，筑基期修士常备。"
+    },
+    {
+      "id": "pill_recovery_foundation_earth", "name": "土气固基丹",
+      "rarity": 1, "phase": 4, "requiredRealm": 1,
+      "restoreHp": 500, "restoreMp": 250, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "玄土之气凝练，厚德载物，可大幅恢复气血，筑基期修士常备。"
+    },
+    {
+      "id": "pill_recovery_goldencore_metal", "name": "金气护丹丹",
+      "rarity": 2, "phase": 0, "requiredRealm": 2,
+      "restoreHp": 2000, "restoreMp": 1000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "金属抗性+5%", "duration": 60,
+      "stackable": true, "maxStack": 99, "description": "千年金矿灵气凝炼，恢复气血同时短暂提升金属抗性，金丹期修士专用。"
+    },
+    {
+      "id": "pill_recovery_goldencore_wood", "name": "木气护丹丹",
+      "rarity": 2, "phase": 1, "requiredRealm": 2,
+      "restoreHp": 2000, "restoreMp": 1000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "木系抗性+5%", "duration": 60,
+      "stackable": true, "maxStack": 99, "description": "千年灵木精华凝炼，恢复气血同时短暂提升木系抗性，金丹期修士专用。"
+    },
+    {
+      "id": "pill_recovery_goldencore_water", "name": "水气护丹丹",
+      "rarity": 2, "phase": 2, "requiredRealm": 2,
+      "restoreHp": 2000, "restoreMp": 1000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "水系抗性+5%", "duration": 60,
+      "stackable": true, "maxStack": 99, "description": "玄冥寒泉凝炼，恢复气血同时短暂提升水系抗性，金丹期修士专用。"
+    },
+    {
+      "id": "pill_recovery_goldencore_fire", "name": "火气护丹丹",
+      "rarity": 2, "phase": 3, "requiredRealm": 2,
+      "restoreHp": 2000, "restoreMp": 1000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "火系抗性+5%", "duration": 60,
+      "stackable": true, "maxStack": 99, "description": "三昧真火凝炼，恢复气血同时短暂提升火系抗性，金丹期修士专用。"
+    },
+    {
+      "id": "pill_recovery_goldencore_earth", "name": "土气护丹丹",
+      "rarity": 2, "phase": 4, "requiredRealm": 2,
+      "restoreHp": 2000, "restoreMp": 1000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "土系抗性+5%", "duration": 60,
+      "stackable": true, "maxStack": 99, "description": "黄龙厚土凝炼，恢复气血同时短暂提升土系抗性，金丹期修士专用。"
+    },
+    {
+      "id": "pill_recovery_nascentsoul_metal", "name": "金气养婴丹",
+      "rarity": 3, "phase": 0, "requiredRealm": 3,
+      "restoreHp": 8000, "restoreMp": 4000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+10%", "duration": 120,
+      "stackable": true, "maxStack": 99, "description": "金气滋养元婴，大幅恢复气血真元，短时间全面提升战力，元婴期修士专用。"
+    },
+    {
+      "id": "pill_recovery_nascentsoul_wood", "name": "木气养婴丹",
+      "rarity": 3, "phase": 1, "requiredRealm": 3,
+      "restoreHp": 8000, "restoreMp": 4000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+10%", "duration": 120,
+      "stackable": true, "maxStack": 99, "description": "木气滋养元婴，大幅恢复气血真元，短时间全面提升战力，元婴期修士专用。"
+    },
+    {
+      "id": "pill_recovery_nascentsoul_water", "name": "水气养婴丹",
+      "rarity": 3, "phase": 2, "requiredRealm": 3,
+      "restoreHp": 8000, "restoreMp": 4000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+10%", "duration": 120,
+      "stackable": true, "maxStack": 99, "description": "水气滋养元婴，大幅恢复气血真元，短时间全面提升战力，元婴期修士专用。"
+    },
+    {
+      "id": "pill_recovery_nascentsoul_fire", "name": "火气养婴丹",
+      "rarity": 3, "phase": 3, "requiredRealm": 3,
+      "restoreHp": 8000, "restoreMp": 4000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+10%", "duration": 120,
+      "stackable": true, "maxStack": 99, "description": "火气滋养元婴，大幅恢复气血真元，短时间全面提升战力，元婴期修士专用。"
+    },
+    {
+      "id": "pill_recovery_nascentsoul_earth", "name": "土气养婴丹",
+      "rarity": 3, "phase": 4, "requiredRealm": 3,
+      "restoreHp": 8000, "restoreMp": 4000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+10%", "duration": 120,
+      "stackable": true, "maxStack": 99, "description": "土气滋养元婴，大幅恢复气血真元，短时间全面提升战力，元婴期修士专用。"
+    },
+    {
+      "id": "pill_recovery_godtransformation_metal", "name": "天金化神丹",
+      "rarity": 3, "phase": 0, "requiredRealm": 4,
+      "restoreHp": 30000, "restoreMp": 15000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+15%", "duration": 180,
+      "stackable": true, "maxStack": 99, "description": "天地金气凝炼，补充元神损耗，化神期修士专用。"
+    },
+    {
+      "id": "pill_recovery_godtransformation_wood", "name": "天木化神丹",
+      "rarity": 3, "phase": 1, "requiredRealm": 4,
+      "restoreHp": 30000, "restoreMp": 15000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+15%", "duration": 180,
+      "stackable": true, "maxStack": 99, "description": "天地木气凝炼，补充元神损耗，化神期修士专用。"
+    },
+    {
+      "id": "pill_recovery_godtransformation_water", "name": "天水化神丹",
+      "rarity": 3, "phase": 2, "requiredRealm": 4,
+      "restoreHp": 30000, "restoreMp": 15000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+15%", "duration": 180,
+      "stackable": true, "maxStack": 99, "description": "天地水气凝炼，补充元神损耗，化神期修士专用。"
+    },
+    {
+      "id": "pill_recovery_godtransformation_fire", "name": "天火化神丹",
+      "rarity": 3, "phase": 3, "requiredRealm": 4,
+      "restoreHp": 30000, "restoreMp": 15000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+15%", "duration": 180,
+      "stackable": true, "maxStack": 99, "description": "天地火气凝炼，补充元神损耗，化神期修士专用。"
+    },
+    {
+      "id": "pill_recovery_godtransformation_earth", "name": "天土化神丹",
+      "rarity": 3, "phase": 4, "requiredRealm": 4,
+      "restoreHp": 30000, "restoreMp": 15000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+15%", "duration": 180,
+      "stackable": true, "maxStack": 99, "description": "天地土气凝炼，补充元神损耗，化神期修士专用。"
+    },
+    {
+      "id": "pill_recovery_voidreturning_metal", "name": "虚金归虚丹",
+      "rarity": 4, "phase": 0, "requiredRealm": 5,
+      "restoreHp": 100000, "restoreMp": 50000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+20%", "duration": 300,
+      "stackable": true, "maxStack": 30, "description": "虚空金气为引，万年灵矿炼制，迅速恢复大量元神与气血，返虚期修士专用。"
+    },
+    {
+      "id": "pill_recovery_voidreturning_wood", "name": "虚木归虚丹",
+      "rarity": 4, "phase": 1, "requiredRealm": 5,
+      "restoreHp": 100000, "restoreMp": 50000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+20%", "duration": 300,
+      "stackable": true, "maxStack": 30, "description": "虚空木气为引，万年灵木炼制，迅速恢复大量元神与气血，返虚期修士专用。"
+    },
+    {
+      "id": "pill_recovery_voidreturning_water", "name": "虚水归虚丹",
+      "rarity": 4, "phase": 2, "requiredRealm": 5,
+      "restoreHp": 100000, "restoreMp": 50000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+20%", "duration": 300,
+      "stackable": true, "maxStack": 30, "description": "虚空水气为引，万年寒泉炼制，迅速恢复大量元神与气血，返虚期修士专用。"
+    },
+    {
+      "id": "pill_recovery_voidreturning_fire", "name": "虚火归虚丹",
+      "rarity": 4, "phase": 3, "requiredRealm": 5,
+      "restoreHp": 100000, "restoreMp": 50000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+20%", "duration": 300,
+      "stackable": true, "maxStack": 30, "description": "虚空火气为引，万年火灵炼制，迅速恢复大量元神与气血，返虚期修士专用。"
+    },
+    {
+      "id": "pill_recovery_voidreturning_earth", "name": "虚土归虚丹",
+      "rarity": 4, "phase": 4, "requiredRealm": 5,
+      "restoreHp": 100000, "restoreMp": 50000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+20%", "duration": 300,
+      "stackable": true, "maxStack": 30, "description": "虚空土气为引，万年玄土炼制，迅速恢复大量元神与气血，返虚期修士专用。"
+    },
+    {
+      "id": "pill_recovery_tribulation_metal", "name": "劫金护劫丹",
+      "rarity": 4, "phase": 0, "requiredRealm": 6,
+      "restoreHp": 400000, "restoreMp": 200000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+30%", "duration": 600,
+      "stackable": true, "maxStack": 10, "description": "天劫金雷之力炼成，渡劫之时迅速恢复大量损耗，渡劫期修士专用极品丹药。"
+    },
+    {
+      "id": "pill_recovery_tribulation_wood", "name": "劫木护劫丹",
+      "rarity": 4, "phase": 1, "requiredRealm": 6,
+      "restoreHp": 400000, "restoreMp": 200000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+30%", "duration": 600,
+      "stackable": true, "maxStack": 10, "description": "天劫木雷之力炼成，渡劫之时迅速恢复大量损耗，渡劫期修士专用极品丹药。"
+    },
+    {
+      "id": "pill_recovery_tribulation_water", "name": "劫水护劫丹",
+      "rarity": 4, "phase": 2, "requiredRealm": 6,
+      "restoreHp": 400000, "restoreMp": 200000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+30%", "duration": 600,
+      "stackable": true, "maxStack": 10, "description": "天劫水雷之力炼成，渡劫之时迅速恢复大量损耗，渡劫期修士专用极品丹药。"
+    },
+    {
+      "id": "pill_recovery_tribulation_fire", "name": "劫火护劫丹",
+      "rarity": 4, "phase": 3, "requiredRealm": 6,
+      "restoreHp": 400000, "restoreMp": 200000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+30%", "duration": 600,
+      "stackable": true, "maxStack": 10, "description": "天劫火雷之力炼成，渡劫之时迅速恢复大量损耗，渡劫期修士专用极品丹药。"
+    },
+    {
+      "id": "pill_recovery_tribulation_earth", "name": "劫土护劫丹",
+      "rarity": 4, "phase": 4, "requiredRealm": 6,
+      "restoreHp": 400000, "restoreMp": 200000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+30%", "duration": 600,
+      "stackable": true, "maxStack": 10, "description": "天劫土雷之力炼成，渡劫之时迅速恢复大量损耗，渡劫期修士专用极品丹药。"
+    },
+    {
+      "id": "pill_recovery_mahayana_metal", "name": "仙金续命丹",
+      "rarity": 5, "phase": 0, "requiredRealm": 7,
+      "restoreHp": 2000000, "restoreMp": 1000000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+50%", "duration": 1200,
+      "stackable": true, "maxStack": 5, "description": "仙界金气凝就，瞬息间恢复九成元神气血，大乘期修士专属仙丹。"
+    },
+    {
+      "id": "pill_recovery_mahayana_wood", "name": "仙木续命丹",
+      "rarity": 5, "phase": 1, "requiredRealm": 7,
+      "restoreHp": 2000000, "restoreMp": 1000000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+50%", "duration": 1200,
+      "stackable": true, "maxStack": 5, "description": "仙界木气凝就，瞬息间恢复九成元神气血，大乘期修士专属仙丹。"
+    },
+    {
+      "id": "pill_recovery_mahayana_water", "name": "仙水续命丹",
+      "rarity": 5, "phase": 2, "requiredRealm": 7,
+      "restoreHp": 2000000, "restoreMp": 1000000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+50%", "duration": 1200,
+      "stackable": true, "maxStack": 5, "description": "仙界水气凝就，瞬息间恢复九成元神气血，大乘期修士专属仙丹。"
+    },
+    {
+      "id": "pill_recovery_mahayana_fire", "name": "仙火续命丹",
+      "rarity": 5, "phase": 3, "requiredRealm": 7,
+      "restoreHp": 2000000, "restoreMp": 1000000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+50%", "duration": 1200,
+      "stackable": true, "maxStack": 5, "description": "仙界火气凝就，瞬息间恢复九成元神气血，大乘期修士专属仙丹。"
+    },
+    {
+      "id": "pill_recovery_mahayana_earth", "name": "仙土续命丹",
+      "rarity": 5, "phase": 4, "requiredRealm": 7,
+      "restoreHp": 2000000, "restoreMp": 1000000, "restoreCultivation": 0, "breakthroughBonus": 0, "buff": "全属性+50%", "duration": 1200,
+      "stackable": true, "maxStack": 5, "description": "仙界土气凝就，瞬息间恢复九成元神气血，大乘期修士专属仙丹。"
+    },
+    {
+      "id": "pill_cultivation_qirefining_metal", "name": "金气聚气丹",
+      "rarity": 0, "phase": 0, "requiredRealm": 0,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 200, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "提炼金属灵气精华，服用后直接增长修为，辅助练气期修炼。"
+    },
+    {
+      "id": "pill_cultivation_qirefining_wood", "name": "木气聚气丹",
+      "rarity": 0, "phase": 1, "requiredRealm": 0,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 200, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "提炼木系灵气精华，服用后直接增长修为，辅助练气期修炼。"
+    },
+    {
+      "id": "pill_cultivation_qirefining_water", "name": "水气聚气丹",
+      "rarity": 0, "phase": 2, "requiredRealm": 0,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 200, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "提炼水系灵气精华，服用后直接增长修为，辅助练气期修炼。"
+    },
+    {
+      "id": "pill_cultivation_qirefining_fire", "name": "火气聚气丹",
+      "rarity": 0, "phase": 3, "requiredRealm": 0,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 200, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "提炼火系灵气精华，服用后直接增长修为，辅助练气期修炼。"
+    },
+    {
+      "id": "pill_cultivation_qirefining_earth", "name": "土气聚气丹",
+      "rarity": 0, "phase": 4, "requiredRealm": 0,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 200, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "提炼土系灵气精华，服用后直接增长修为，辅助练气期修炼。"
+    },
+    {
+      "id": "pill_cultivation_foundation_metal", "name": "金气凝基丹",
+      "rarity": 1, "phase": 0, "requiredRealm": 1,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 1000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "金属灵气精粹凝聚，大幅增长筑基期修为，为修炼必备辅助丹药。"
+    },
+    {
+      "id": "pill_cultivation_foundation_wood", "name": "木气凝基丹",
+      "rarity": 1, "phase": 1, "requiredRealm": 1,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 1000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "木系灵气精粹凝聚，大幅增长筑基期修为，为修炼必备辅助丹药。"
+    },
+    {
+      "id": "pill_cultivation_foundation_water", "name": "水气凝基丹",
+      "rarity": 1, "phase": 2, "requiredRealm": 1,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 1000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "水系灵气精粹凝聚，大幅增长筑基期修为，为修炼必备辅助丹药。"
+    },
+    {
+      "id": "pill_cultivation_foundation_fire", "name": "火气凝基丹",
+      "rarity": 1, "phase": 3, "requiredRealm": 1,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 1000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "火系灵气精粹凝聚，大幅增长筑基期修为，为修炼必备辅助丹药。"
+    },
+    {
+      "id": "pill_cultivation_foundation_earth", "name": "土气凝基丹",
+      "rarity": 1, "phase": 4, "requiredRealm": 1,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 1000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "土系灵气精粹凝聚，大幅增长筑基期修为，为修炼必备辅助丹药。"
+    },
+    {
+      "id": "pill_cultivation_goldencore_metal", "name": "金气炼丹丹",
+      "rarity": 2, "phase": 0, "requiredRealm": 2,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 5000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "凝聚金丹期金属灵气精华，直接转化为修为，助力金丹圆满。"
+    },
+    {
+      "id": "pill_cultivation_goldencore_wood", "name": "木气炼丹丹",
+      "rarity": 2, "phase": 1, "requiredRealm": 2,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 5000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "凝聚金丹期木系灵气精华，直接转化为修为，助力金丹圆满。"
+    },
+    {
+      "id": "pill_cultivation_goldencore_water", "name": "水气炼丹丹",
+      "rarity": 2, "phase": 2, "requiredRealm": 2,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 5000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "凝聚金丹期水系灵气精华，直接转化为修为，助力金丹圆满。"
+    },
+    {
+      "id": "pill_cultivation_goldencore_fire", "name": "火气炼丹丹",
+      "rarity": 2, "phase": 3, "requiredRealm": 2,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 5000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "凝聚金丹期火系灵气精华，直接转化为修为，助力金丹圆满。"
+    },
+    {
+      "id": "pill_cultivation_goldencore_earth", "name": "土气炼丹丹",
+      "rarity": 2, "phase": 4, "requiredRealm": 2,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 5000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "凝聚金丹期土系灵气精华，直接转化为修为，助力金丹圆满。"
+    },
+    {
+      "id": "pill_cultivation_nascentsoul_metal", "name": "金气育婴丹",
+      "rarity": 3, "phase": 0, "requiredRealm": 3,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 20000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "金系灵气直贯元婴，大量增长元婴期修为，助修士加速圆满。"
+    },
+    {
+      "id": "pill_cultivation_nascentsoul_wood", "name": "木气育婴丹",
+      "rarity": 3, "phase": 1, "requiredRealm": 3,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 20000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "木系灵气直贯元婴，大量增长元婴期修为，助修士加速圆满。"
+    },
+    {
+      "id": "pill_cultivation_nascentsoul_water", "name": "水气育婴丹",
+      "rarity": 3, "phase": 2, "requiredRealm": 3,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 20000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "水系灵气直贯元婴，大量增长元婴期修为，助修士加速圆满。"
+    },
+    {
+      "id": "pill_cultivation_nascentsoul_fire", "name": "火气育婴丹",
+      "rarity": 3, "phase": 3, "requiredRealm": 3,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 20000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "火系灵气直贯元婴，大量增长元婴期修为，助修士加速圆满。"
+    },
+    {
+      "id": "pill_cultivation_nascentsoul_earth", "name": "土气育婴丹",
+      "rarity": 3, "phase": 4, "requiredRealm": 3,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 20000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "土系灵气直贯元婴，大量增长元婴期修为，助修士加速圆满。"
+    },
+    {
+      "id": "pill_cultivation_godtransformation_metal", "name": "金气炼神丹",
+      "rarity": 3, "phase": 0, "requiredRealm": 4,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 100000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "天地金气精炼化神元力，大幅推进化神期修为进境。"
+    },
+    {
+      "id": "pill_cultivation_godtransformation_wood", "name": "木气炼神丹",
+      "rarity": 3, "phase": 1, "requiredRealm": 4,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 100000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "天地木气精炼化神元力，大幅推进化神期修为进境。"
+    },
+    {
+      "id": "pill_cultivation_godtransformation_water", "name": "水气炼神丹",
+      "rarity": 3, "phase": 2, "requiredRealm": 4,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 100000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "天地水气精炼化神元力，大幅推进化神期修为进境。"
+    },
+    {
+      "id": "pill_cultivation_godtransformation_fire", "name": "火气炼神丹",
+      "rarity": 3, "phase": 3, "requiredRealm": 4,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 100000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "天地火气精炼化神元力，大幅推进化神期修为进境。"
+    },
+    {
+      "id": "pill_cultivation_godtransformation_earth", "name": "土气炼神丹",
+      "rarity": 3, "phase": 4, "requiredRealm": 4,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 100000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 99, "description": "天地土气精炼化神元力，大幅推进化神期修为进境。"
+    },
+    {
+      "id": "pill_cultivation_voidreturning_metal", "name": "虚金蓄虚丹",
+      "rarity": 4, "phase": 0, "requiredRealm": 5,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 500000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 30, "description": "虚空金气凝炼，蓄积返虚修为，助修士加速迈向返虚圆满。"
+    },
+    {
+      "id": "pill_cultivation_voidreturning_wood", "name": "虚木蓄虚丹",
+      "rarity": 4, "phase": 1, "requiredRealm": 5,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 500000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 30, "description": "虚空木气凝炼，蓄积返虚修为，助修士加速迈向返虚圆满。"
+    },
+    {
+      "id": "pill_cultivation_voidreturning_water", "name": "虚水蓄虚丹",
+      "rarity": 4, "phase": 2, "requiredRealm": 5,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 500000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 30, "description": "虚空水气凝炼，蓄积返虚修为，助修士加速迈向返虚圆满。"
+    },
+    {
+      "id": "pill_cultivation_voidreturning_fire", "name": "虚火蓄虚丹",
+      "rarity": 4, "phase": 3, "requiredRealm": 5,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 500000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 30, "description": "虚空火气凝炼，蓄积返虚修为，助修士加速迈向返虚圆满。"
+    },
+    {
+      "id": "pill_cultivation_voidreturning_earth", "name": "虚土蓄虚丹",
+      "rarity": 4, "phase": 4, "requiredRealm": 5,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 500000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 30, "description": "虚空土气凝炼，蓄积返虚修为，助修士加速迈向返虚圆满。"
+    },
+    {
+      "id": "pill_cultivation_tribulation_metal", "name": "劫金积劫丹",
+      "rarity": 4, "phase": 0, "requiredRealm": 6,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 2000000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 10, "description": "以劫雷金力凝炼修为，大幅加速渡劫期修炼进度，十分珍贵。"
+    },
+    {
+      "id": "pill_cultivation_tribulation_wood", "name": "劫木积劫丹",
+      "rarity": 4, "phase": 1, "requiredRealm": 6,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 2000000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 10, "description": "以劫雷木力凝炼修为，大幅加速渡劫期修炼进度，十分珍贵。"
+    },
+    {
+      "id": "pill_cultivation_tribulation_water", "name": "劫水积劫丹",
+      "rarity": 4, "phase": 2, "requiredRealm": 6,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 2000000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 10, "description": "以劫雷水力凝炼修为，大幅加速渡劫期修炼进度，十分珍贵。"
+    },
+    {
+      "id": "pill_cultivation_tribulation_fire", "name": "劫火积劫丹",
+      "rarity": 4, "phase": 3, "requiredRealm": 6,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 2000000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 10, "description": "以劫雷火力凝炼修为，大幅加速渡劫期修炼进度，十分珍贵。"
+    },
+    {
+      "id": "pill_cultivation_tribulation_earth", "name": "劫土积劫丹",
+      "rarity": 4, "phase": 4, "requiredRealm": 6,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 2000000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 10, "description": "以劫雷土力凝炼修为，大幅加速渡劫期修炼进度，十分珍贵。"
+    },
+    {
+      "id": "pill_cultivation_mahayana_metal", "name": "仙金悟道丹",
+      "rarity": 5, "phase": 0, "requiredRealm": 7,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 10000000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 5, "description": "仙界金气灌注，服之自生大道感悟，推进大乘修为向仙境迈进。"
+    },
+    {
+      "id": "pill_cultivation_mahayana_wood", "name": "仙木悟道丹",
+      "rarity": 5, "phase": 1, "requiredRealm": 7,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 10000000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 5, "description": "仙界木气灌注，服之自生大道感悟，推进大乘修为向仙境迈进。"
+    },
+    {
+      "id": "pill_cultivation_mahayana_water", "name": "仙水悟道丹",
+      "rarity": 5, "phase": 2, "requiredRealm": 7,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 10000000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 5, "description": "仙界水气灌注，服之自生大道感悟，推进大乘修为向仙境迈进。"
+    },
+    {
+      "id": "pill_cultivation_mahayana_fire", "name": "仙火悟道丹",
+      "rarity": 5, "phase": 3, "requiredRealm": 7,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 10000000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 5, "description": "仙界火气灌注，服之自生大道感悟，推进大乘修为向仙境迈进。"
+    },
+    {
+      "id": "pill_cultivation_mahayana_earth", "name": "仙土悟道丹",
+      "rarity": 5, "phase": 4, "requiredRealm": 7,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 10000000, "breakthroughBonus": 0, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 5, "description": "仙界土气灌注，服之自生大道感悟，推进大乘修为向仙境迈进。"
+    },
+    {
+      "id": "pill_breakthrough_qirefining_metal", "name": "金气筑基辅丹",
+      "rarity": 1, "phase": 0, "requiredRealm": 0,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.05, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 30, "description": "以金属灵气为主炼制，服用后提升筑基突破概率5%，练气圆满修士必备。"
+    },
+    {
+      "id": "pill_breakthrough_qirefining_wood", "name": "木气筑基辅丹",
+      "rarity": 1, "phase": 1, "requiredRealm": 0,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.05, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 30, "description": "以木系灵气为主炼制，服用后提升筑基突破概率5%，练气圆满修士必备。"
+    },
+    {
+      "id": "pill_breakthrough_qirefining_water", "name": "水气筑基辅丹",
+      "rarity": 1, "phase": 2, "requiredRealm": 0,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.05, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 30, "description": "以水系灵气为主炼制，服用后提升筑基突破概率5%，练气圆满修士必备。"
+    },
+    {
+      "id": "pill_breakthrough_qirefining_fire", "name": "火气筑基辅丹",
+      "rarity": 1, "phase": 3, "requiredRealm": 0,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.05, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 30, "description": "以火系灵气为主炼制，服用后提升筑基突破概率5%，练气圆满修士必备。"
+    },
+    {
+      "id": "pill_breakthrough_qirefining_earth", "name": "土气筑基辅丹",
+      "rarity": 1, "phase": 4, "requiredRealm": 0,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.05, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 30, "description": "以土系灵气为主炼制，服用后提升筑基突破概率5%，练气圆满修士必备。"
+    },
+    {
+      "id": "pill_breakthrough_foundation_metal", "name": "金气化丹辅丹",
+      "rarity": 2, "phase": 0, "requiredRealm": 1,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.08, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 20, "description": "金属灵气提纯，辅助筑基修士凝结金丹，提升突破成功率8%。"
+    },
+    {
+      "id": "pill_breakthrough_foundation_wood", "name": "木气化丹辅丹",
+      "rarity": 2, "phase": 1, "requiredRealm": 1,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.08, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 20, "description": "木系灵气提纯，辅助筑基修士凝结金丹，提升突破成功率8%。"
+    },
+    {
+      "id": "pill_breakthrough_foundation_water", "name": "水气化丹辅丹",
+      "rarity": 2, "phase": 2, "requiredRealm": 1,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.08, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 20, "description": "水系灵气提纯，辅助筑基修士凝结金丹，提升突破成功率8%。"
+    },
+    {
+      "id": "pill_breakthrough_foundation_fire", "name": "火气化丹辅丹",
+      "rarity": 2, "phase": 3, "requiredRealm": 1,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.08, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 20, "description": "火系灵气提纯，辅助筑基修士凝结金丹，提升突破成功率8%。"
+    },
+    {
+      "id": "pill_breakthrough_foundation_earth", "name": "土气化丹辅丹",
+      "rarity": 2, "phase": 4, "requiredRealm": 1,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.08, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 20, "description": "土系灵气提纯，辅助筑基修士凝结金丹，提升突破成功率8%。"
+    },
+    {
+      "id": "pill_breakthrough_goldencore_metal", "name": "金气化婴辅丹",
+      "rarity": 3, "phase": 0, "requiredRealm": 2,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.10, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 10, "description": "金丹期金系顶阶灵材炼制，辅助金丹期修士凝结元婴，提升突破成功率10%。"
+    },
+    {
+      "id": "pill_breakthrough_goldencore_wood", "name": "木气化婴辅丹",
+      "rarity": 3, "phase": 1, "requiredRealm": 2,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.10, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 10, "description": "金丹期木系顶阶灵材炼制，辅助金丹期修士凝结元婴，提升突破成功率10%。"
+    },
+    {
+      "id": "pill_breakthrough_goldencore_water", "name": "水气化婴辅丹",
+      "rarity": 3, "phase": 2, "requiredRealm": 2,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.10, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 10, "description": "金丹期水系顶阶灵材炼制，辅助金丹期修士凝结元婴，提升突破成功率10%。"
+    },
+    {
+      "id": "pill_breakthrough_goldencore_fire", "name": "火气化婴辅丹",
+      "rarity": 3, "phase": 3, "requiredRealm": 2,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.10, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 10, "description": "金丹期火系顶阶灵材炼制，辅助金丹期修士凝结元婴，提升突破成功率10%。"
+    },
+    {
+      "id": "pill_breakthrough_goldencore_earth", "name": "土气化婴辅丹",
+      "rarity": 3, "phase": 4, "requiredRealm": 2,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.10, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 10, "description": "金丹期土系顶阶灵材炼制，辅助金丹期修士凝结元婴，提升突破成功率10%。"
+    },
+    {
+      "id": "pill_breakthrough_nascentsoul_metal", "name": "金气渡化辅丹",
+      "rarity": 3, "phase": 0, "requiredRealm": 3,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.12, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 5, "description": "元婴期金系极品灵材炼制，辅助元婴修士化神，突破成功率显著提升12%。"
+    },
+    {
+      "id": "pill_breakthrough_nascentsoul_wood", "name": "木气渡化辅丹",
+      "rarity": 3, "phase": 1, "requiredRealm": 3,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.12, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 5, "description": "元婴期木系极品灵材炼制，辅助元婴修士化神，突破成功率显著提升12%。"
+    },
+    {
+      "id": "pill_breakthrough_nascentsoul_water", "name": "水气渡化辅丹",
+      "rarity": 3, "phase": 2, "requiredRealm": 3,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.12, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 5, "description": "元婴期水系极品灵材炼制，辅助元婴修士化神，突破成功率显著提升12%。"
+    },
+    {
+      "id": "pill_breakthrough_nascentsoul_fire", "name": "火气渡化辅丹",
+      "rarity": 3, "phase": 3, "requiredRealm": 3,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.12, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 5, "description": "元婴期火系极品灵材炼制，辅助元婴修士化神，突破成功率显著提升12%。"
+    },
+    {
+      "id": "pill_breakthrough_nascentsoul_earth", "name": "土气渡化辅丹",
+      "rarity": 3, "phase": 4, "requiredRealm": 3,
+      "restoreHp": 0, "restoreMp": 0, "restoreCultivation": 0, "breakthroughBonus": 0.12, "buff": "", "duration": 0,
+      "stackable": true, "maxStack": 5, "description": "元婴期土系极品灵材炼制，辅助元婴修士化神，突破成功率显著提升12%。"
+    }
+  ]
+}
