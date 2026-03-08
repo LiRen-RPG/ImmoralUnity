@@ -23,8 +23,8 @@ namespace Immortal.Controllers
         [SerializeField] private GameObject[] kanEffectPrefabs = new GameObject[MAX_EFFECT_LEVELS];
         [SerializeField] private GameObject[] genEffectPrefabs = new GameObject[MAX_EFFECT_LEVELS];
 
-        // 当前阵盘信息
-        private EightTrigramsFormationPlate formationPlate;
+        // 当前阵盘实例
+        private FormationInstance formationInstance;
         
         // 当前激活的特效节点，格式：[卦][等级] => GameObject[]
         private Dictionary<EightTrigramsType, List<GameObject>> activeEffectNodes = 
@@ -39,11 +39,11 @@ namespace Immortal.Controllers
         }
 
         /// <summary>
-        /// 设置阵盘信息并刷新特效显示
+        /// 设置阵盘实例并刷新特效显示
         /// </summary>
-        public void SetFormationPlate(EightTrigramsFormationPlate plate)
+        public void SetFormationInstance(FormationInstance instance)
         {
-            formationPlate = plate;
+            formationInstance = instance;
             RefreshEffects();
         }
 
@@ -73,7 +73,7 @@ namespace Immortal.Controllers
         /// </summary>
         public void RefreshEffects()
         {
-            if (formationPlate == null || trigramsUI == null) return;
+            if (formationInstance == null || trigramsUI == null) return;
 
             // 清理所有已激活的特效节点
             foreach (var nodeList in activeEffectNodes.Values)
@@ -92,10 +92,10 @@ namespace Immortal.Controllers
 
                 // 检查该卦位是否有物品
                 bool hasItems = CheckTrigramHasItems(trigramEnum);
-                if (!hasItems) continue; // 没有物品则跳过
+                if (!hasItems) continue;
 
                 // 获取物品等级来决定特效等级
-                int? level = formationPlate.GetTrigramLevel(trigramEnum);
+                int? level = formationInstance.GetTrigramLevel(trigramEnum);
                 if (level == null) continue;
 
                 // 获取对应的特效预制体
@@ -107,17 +107,13 @@ namespace Immortal.Controllers
 
                 // 记录激活的特效节点
                 if (!activeEffectNodes.ContainsKey(trigramEnum))
-                {
                     activeEffectNodes[trigramEnum] = new List<GameObject>();
-                }
                 activeEffectNodes[trigramEnum].Add(effectNode);
 
                 // 由于有物品，该卦位会自动获得技能
-                SkillConfig skill = formationPlate.GetTrigramSkill(trigramEnum);
+                SkillConfig skill = formationInstance.GetTrigramSkill(trigramEnum);
                 if (skill != null)
-                {
                     Debug.Log($"卦位 {trigramEnum} 激活阵盘特效和技能: {skill.name}");
-                }
             }
         }
 
@@ -126,18 +122,8 @@ namespace Immortal.Controllers
         /// </summary>
         private bool CheckTrigramHasItems(EightTrigramsType trigramType)
         {
-            int[] slotIndices = formationPlate.GetSlotIndicesForTrigram(trigramType);
-
-            // 检查该卦位的所有槽位，只要有一个槽位有物品就返回true
-            foreach (int slotIndex in slotIndices)
-            {
-                Immortal.Item.BaseItem item = formationPlate.GetItem(slotIndex);
-                if (item != null)
-                {
-                    return true;
-                }
-            }
-
+            for (int i = 0; i < 3; i++)
+                if (formationInstance.GetItem(trigramType, i) != null) return true;
             return false;
         }
 
@@ -149,7 +135,7 @@ namespace Immortal.Controllers
         /// <param name="targetPosition">目标位置（可选，用于技能指向特效）</param>
         public void PlaySkillEffect(SkillConfig skill, EightTrigramsType trigramType, Vector3? targetPosition = null)
         {
-            if (formationPlate == null || trigramsUI == null)
+            if (formationInstance == null || trigramsUI == null)
             {
                 Debug.LogWarning("Formation3D: 阵盘或UI未设置，无法播放技能特效");
                 return;
@@ -378,13 +364,13 @@ namespace Immortal.Controllers
         /// </summary>
         public void PlayTrigramSkillEffect(EightTrigramsType trigramType, Vector3? targetPosition = null)
         {
-            if (formationPlate == null)
+            if (formationInstance == null)
             {
                 Debug.LogWarning("Formation3D: 阵盘未设置");
                 return;
             }
 
-            SkillConfig skill = formationPlate.GetTrigramSkill(trigramType);
+            SkillConfig skill = formationInstance.GetTrigramSkill(trigramType);
             if (skill == null)
             {
                 Debug.LogWarning($"Formation3D: 卦位 {trigramType} 无可用技能");

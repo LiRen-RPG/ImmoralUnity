@@ -69,14 +69,13 @@ namespace Immortal.Controllers
             // 添加示例物品
             AddExampleItems();
             
-            // 创建八卦阵盘并添加到背包
-            CreateAndAddFormations();
 
             Debug.Log("主角初始化完成，已添加示例物品和八卦阵盘到背包中");
         }
 
         private void AddExampleItems()
         {
+            CreateAndAddFormations();
             var inventory = actorBase.GetInventory();
             var iconManager = Immortal.Utils.IconManager.GetInstance();
 
@@ -93,10 +92,11 @@ namespace Immortal.Controllers
         private void CreateAndAddFormations()
         {
             var inventory = actorBase.GetInventory();
-            
-            // 创建八卦阵盘（这里需要根据实际的ContainerUtils实现）
-            // var customFormation = ContainerUtils.CreateEightTrigramsFormation(ItemRarity.Epic, "玄天八卦阵盘");
-            // InventoryUtils.AddItem(inventory, customFormation, 1);
+
+            // 主角出生时持有一块基础阵盘， FormationInstance 由 AddItem 自动创建
+            var formation = ItemDatabase.Get("formation_confine_basic");
+            if (formation != null)
+                inventory.AddItem(formation, 1);
         }
 
         private void OnDestroy()

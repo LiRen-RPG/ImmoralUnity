@@ -45,22 +45,22 @@ namespace Immortal.UI
             var item = slotUI.GetCurrentItem();
             if (item == null) return;
             // 立即反馈（动画/音效等）
-            Debug.Log($"立即点击槽位 {slotIndex}: {item.name}");
+            Debug.Log($"立即点击槽位 {slotIndex}: {item.Name}");
         }
 
         private void OnSlotSingleClick(int slotIndex, InventorySlotUI slotUI)
         {
             var item = slotUI.GetCurrentItem();
             if (item == null) return;
-            Debug.Log($"单击槽位 {slotIndex}: {item.name}");
+            Debug.Log($"单击槽位 {slotIndex}: {item.Name}");
 
-            switch (item.type)
+            switch (item.Type)
             {
                 case ItemType.Formation:
                     OpenFormationUI(item, slotUI);
                     break;
                 default:
-                    Debug.Log($"显示物品基础信息: {item.name}");
+                    Debug.Log($"显示物品基础信息: {item.Name}");
                     break;
             }
         }
@@ -69,9 +69,9 @@ namespace Immortal.UI
         {
             var item = slotUI.GetCurrentItem();
             if (item == null) return;
-            Debug.Log($"双击槽位 {slotIndex}: {item.name}");
+            Debug.Log($"双击槽位 {slotIndex}: {item.Name}");
 
-            switch (item.type)
+            switch (item.Type)
             {
                 case ItemType.Formation:
                     HandleFormationDoubleClick(item, slotUI);
@@ -89,10 +89,13 @@ namespace Immortal.UI
             var mgr = UIManager.Instance;
             if (mgr == null) return;
 
-            // Formation plate 由外部（Actor/Controller）注入；此处创建临时数据供预览
-            var plate = new EightTrigramsFormationPlate();
+            // FormationInstance IS the BaseItem now — cast directly
+            var instance = item as FormationInstance
+                ?? new FormationInstance(item.ConfigId);
+            instance.Hydrate();
+
             mgr.ShowFormationUI();
-            mgr.GetFormationUI()?.SwitchToFormation(plate, () =>
+            mgr.GetFormationUI()?.SwitchToFormation(instance, () =>
             {
                 slotUI.SetInteractionEnabled(true);
             });
@@ -104,14 +107,17 @@ namespace Immortal.UI
             var mgr = UIManager.Instance;
             if (mgr == null) return;
 
-            var plate = new EightTrigramsFormationPlate();
+            var instance = item as FormationInstance
+                ?? new FormationInstance(item.ConfigId);
+            instance.Hydrate();
+
             mgr.ShowFormationUI();
-            mgr.GetFormationUI()?.SwitchToFormation(plate, null);
+            mgr.GetFormationUI()?.SwitchToFormation(instance, null);
         }
 
         private void PerformDefaultAction(BaseItem item)
         {
-            Debug.Log($"执行默认操作: {item.name}");
+            Debug.Log($"执行默认操作: {item.Name}");
         }
     }
 }

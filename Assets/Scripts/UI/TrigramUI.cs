@@ -26,8 +26,17 @@ namespace Immortal.UI
         [Header("物品槽（每卦 3 个）")]
         [SerializeField] private InventorySlotUI[] itemSlots = new InventorySlotUI[3];
 
+        [Header("槽位透明度")]
+        [SerializeField, Range(0f, 1f)] private float slotsAlpha = 1f;
+
         // 对应的卦类型
         private EightTrigramsType trigramType;
+
+        // ---------- 卦名（与 EightTrigramsType 顺序一致）----------
+        private static readonly string[] TrigramNames =
+        {
+            "震", "巽", "离", "坤", "兑", "乾", "坎", "艮"
+        };
 
         // ---------- 方位名称 ----------
         private static readonly string[] DirectionNames =
@@ -37,30 +46,26 @@ namespace Immortal.UI
 
         // ======================== 初始化 ========================
 
-        public void SetTrigram(EightTrigramsType type, EightTrigramsFormationPlate plate)
+        public void SetTrigram(EightTrigramsType type, FormationInstance instance)
         {
             trigramType = type;
 
             // 标签
             if (trigramNameLabel != null)
-                trigramNameLabel.text = type.ToString();   // 或使用中文映射
+                trigramNameLabel.text = TrigramNames[(int)type];
             if (positionLabel != null)
                 positionLabel.text = DirectionNames[(int)type];
 
-            // 爻贴图（用枚举值的二进制位近似阴阳——实际项目可查表）
+            // 爻贴图
             UpdateYaoSprites(type);
 
             // 物品槽
-            if (plate != null)
+            if (instance != null)
             {
-                int[] indices = plate.GetSlotIndicesForTrigram(type);
-                for (int i = 0; i < itemSlots.Length && i < indices.Length; i++)
+                for (int i = 0; i < itemSlots.Length && i < 3; i++)
                 {
                     if (itemSlots[i] != null)
-                    {
-                        // 此处只刷新显示；槽位数据由 EightTrigramsFormationUI 统一绑定
                         itemSlots[i].UpdateDisplay();
-                    }
                 }
             }
         }
@@ -94,6 +99,37 @@ namespace Immortal.UI
             if (img == null) return;
             img.sprite = isYang ? yangYaoFrame : yinYaoFrame;
         }
+
+        /// <summary>根据自身 up 方向同步标签朝向，旋转设置后调用。</summary>
+        public void UpdateLabelOrientation()
+        {
+            float labelRot = 0;
+            Vector3 up = transform.up;
+            if(up.y < -0.1f) labelRot = 180f;
+            else if(Mathf.Abs(up.y) <0.01f) {
+                labelRot = 90f * up.x; // 水平放置时标签旋转90度（可选，根据美术设计调整）
+            }
+            if (trigramNameLabel != null)
+                trigramNameLabel.transform.localEulerAngles = new Vector3(0f, 0f, labelRot);
+            if (positionLabel != null)
+                positionLabel.transform.localEulerAngles = new Vector3(0f, 0f, labelRot);
+        }
+
+        // ======================== 透明度 ========================
+
+        /// <summary>将 slotsAlpha 应用到所有物品槽的 CanvasGroup（不存在则自动添加）。</summary>
+        public void ApplySlotsAlpha()
+        {
+            foreach (var slot in itemSlots)
+            {
+                if (slot == null) continue;
+                var cg = slot.GetComponent<CanvasGroup>();
+                if (cg == null) cg = slot.gameObject.AddComponent<CanvasGroup>();
+                cg.alpha = slotsAlpha;
+            }
+        }
+
+        private void OnValidate() => ApplySlotsAlpha();
 
         // ======================== 高亮 ========================
 

@@ -21,56 +21,56 @@ namespace Immortal.Item
         // 对应各 JSON 文件的 { "items": [...] } 结构
         private class ItemList<T> { public List<T> items; }
 
-        private static Dictionary<string, BaseItem> _items;
+        private static Dictionary<string, BaseItemConfig> _items;
 
-        private static Dictionary<string, BaseItem> Items
+        private static Dictionary<string, BaseItemConfig> Items
         {
             get { if (_items == null) Load(); return _items; }
         }
 
         // ── 公共 API ──────────────────────────────────────────────
 
-        /// <summary>按 id 获取物品（不存在返回 null）</summary>
-        public static BaseItem Get(string id)
+        /// <summary>按 id 获取物品配置（不存在返回 null）</summary>
+        public static BaseItemConfig Get(string id)
         {
             Items.TryGetValue(id, out var item);
             return item;
         }
 
-        /// <summary>获取全部物品列表</summary>
-        public static IReadOnlyCollection<BaseItem> GetAll() => Items.Values;
+        /// <summary>获取全部物品配置列表</summary>
+        public static IReadOnlyCollection<BaseItemConfig> GetAll() => Items.Values;
 
         /// <summary>按类型筛选</summary>
-        public static List<BaseItem> GetByType(ItemType type)
+        public static List<BaseItemConfig> GetByType(ItemType type)
         {
-            var result = new List<BaseItem>();
+            var result = new List<BaseItemConfig>();
             foreach (var item in Items.Values)
                 if (item.type == type) result.Add(item);
             return result;
         }
 
         /// <summary>按五行属性筛选</summary>
-        public static List<BaseItem> GetByPhase(FivePhases phase)
+        public static List<BaseItemConfig> GetByPhase(FivePhases phase)
         {
-            var result = new List<BaseItem>();
+            var result = new List<BaseItemConfig>();
             foreach (var item in Items.Values)
                 if (item.phase == phase) result.Add(item);
             return result;
         }
 
         /// <summary>按境界筛选</summary>
-        public static List<BaseItem> GetByRealm(CultivationRealm realm)
+        public static List<BaseItemConfig> GetByRealm(CultivationRealm realm)
         {
-            var result = new List<BaseItem>();
+            var result = new List<BaseItemConfig>();
             foreach (var item in Items.Values)
                 if (item.requiredRealm == realm) result.Add(item);
             return result;
         }
 
         /// <summary>组合筛选</summary>
-        public static List<BaseItem> GetBy(ItemType? type = null, FivePhases? phase = null, CultivationRealm? realm = null)
+        public static List<BaseItemConfig> GetBy(ItemType? type = null, FivePhases? phase = null, CultivationRealm? realm = null)
         {
-            var result = new List<BaseItem>();
+            var result = new List<BaseItemConfig>();
             foreach (var item in Items.Values)
             {
                 if (type.HasValue  && item.type          != type.Value) continue;
@@ -88,23 +88,23 @@ namespace Immortal.Item
 
         private static void Load()
         {
-            _items = new Dictionary<string, BaseItem>();
+            _items = new Dictionary<string, BaseItemConfig>();
             int total = 0;
 
-            total += LoadFile<AmmoItem>     ("Ammo");
-            total += LoadFile<WeaponItem>   ("Weapon");
-            total += LoadFile<TalismanItem> ("Talisman");
-            total += LoadFile<PillItem>     ("Pill");
-            total += LoadFile<MaterialItem> ("Material");
-            total += LoadFile<BookItem>     ("Book");
-            total += LoadFile<TreasureItem> ("Treasure");
-            total += LoadFile<ToolItem>     ("Tool");
-            total += LoadFile<FormationItem>("Formation");
+            total += LoadFile<AmmoConfig>     ("Ammo");
+            total += LoadFile<WeaponConfig>   ("Weapon");
+            total += LoadFile<TalismanConfig> ("Talisman");
+            total += LoadFile<PillConfig>     ("Pill");
+            total += LoadFile<MaterialConfig> ("Material");
+            total += LoadFile<BookConfig>     ("Book");
+            total += LoadFile<TreasureConfig> ("Treasure");
+            total += LoadFile<ToolConfig>     ("Tool");
+            total += LoadFile<FormationConfig>("Formation");
 
             Debug.Log($"[ItemDatabase] 全部加载完成：共 {total} 条物品");
         }
 
-        private static int LoadFile<T>(string fileName) where T : BaseItem
+        private static int LoadFile<T>(string fileName) where T : BaseItemConfig
         {
             string path = $"{Folder}/{fileName}";
             var textAsset = Resources.Load<TextAsset>(path);

@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "id": "formation_confine_basic",    "name": "普通阵盘",
+      "rarity": 0,
+      "stackable": false, "maxStack": 1,
+      "description": "最简易的困阵阵盘，可在原地布下一道微型束缚阵法，短暂迟滞附近敌人行动。"
+    },
+    {
+      "id": "formation_illusion_mid",     "name": "幻象迷阵盘",
+      "rarity": 1,
+      "stackable": false, "maxStack": 1,
+      "description": "中阶幻阵阵盘，激活后于方圆数丈内投射虚假景象，令敌人迷失方向，片刻之间难以分辨真伪。"
+    },
+    {
+      "id": "formation_ward_rare",        "name": "护山金钟阵盘",
+      "rarity": 2,
+      "stackable": false, "maxStack": 1,
+      "description": "稀有防御阵盘，参照门派护山大阵缩制而成，激活后形成金钟护罩，可抵御中阶灵力攻击。"
+    },
+    {
+      "id": "formation_killing_epic",     "name": "七煞天罡阵盘",
+      "rarity": 3,
+      "stackable": false, "maxStack": 1,
+      "description": "史诗级杀伐阵盘，以北斗七星之势排布阵眼，激活即释出七道天罡煞气，可斩杀金丹期以下修士。"
+    },
+    {
+      "id": "formation_void_legendary",   "name": "混沌虚空乾坤盘",
+      "rarity": 4,
+      "stackable": false, "maxStack": 1,
+      "description": "传世级宝物阵盘，以上古混沌石刻绘乾坤图纹，激活后于方圆百丈内展开独立虚空结界，困住其中修士难以逃脱。"
+    }
+  ]
+}

@@ -36,7 +36,7 @@ namespace Immortal.Utils
         /// 获取物品图标路径
         /// 优先使用icon字段，否则按类型自动推断路径，最终回退到默认图标
         /// </summary>
-        public string GetItemIconPath(BaseItem item)
+        public string GetItemIconPath(BaseItemConfig item)
         {
             // 使用icon字段
             if (!string.IsNullOrEmpty(item.icon))
@@ -50,6 +50,12 @@ namespace Immortal.Utils
                 return $"Icons/Pills/{item.id}";
             }
 
+            // 阵盘：所有阵盘共用同一图标
+            if (item.type == ItemType.Formation)
+            {
+                return "Icons/阵盘";
+            }
+
             // 使用默认图标
             return defaultIcon;
         }
@@ -57,7 +63,7 @@ namespace Immortal.Utils
         /// <summary>
         /// 预加载物品图标
         /// </summary>
-        public async Task PreloadItemIcons(BaseItem[] items)
+        public async Task PreloadItemIcons(BaseItemConfig[] items)
         {
             List<string> iconPaths = new List<string>();
             
@@ -105,7 +111,7 @@ namespace Immortal.Utils
         /// <summary>
         /// 加载物品图标
         /// </summary>
-        public async Task<Sprite> LoadItemIcon(BaseItem item)
+        public async Task<Sprite> LoadItemIcon(BaseItemConfig item)
         {
             string iconPath = GetItemIconPath(item);
             return await spriteLoader.LoadSprite(iconPath);
@@ -114,7 +120,7 @@ namespace Immortal.Utils
         /// <summary>
         /// 同步加载物品图标
         /// </summary>
-        public Sprite LoadItemIconSync(BaseItem item)
+        public Sprite LoadItemIconSync(BaseItemConfig item)
         {
             string iconPath = GetItemIconPath(item);
             return spriteLoader.LoadSpriteSync(iconPath);
@@ -123,7 +129,7 @@ namespace Immortal.Utils
         /// <summary>
         /// 检查图标是否已缓存
         /// </summary>
-        public bool IsIconCached(BaseItem item)
+        public bool IsIconCached(BaseItemConfig item)
         {
             string iconPath = GetItemIconPath(item);
             return spriteLoader.IsCached(iconPath);
@@ -153,7 +159,7 @@ namespace Immortal.Utils
         /// <summary>
         /// 批量预加载图标（用于游戏启动时）
         /// </summary>
-        public async Task InitializeIcons(BaseItem[] items = null)
+        public async Task InitializeIcons(BaseItemConfig[] items = null)
         {
             Debug.Log("Initializing icon system...");
             
@@ -200,9 +206,9 @@ namespace Immortal.Utils
         /// <summary>
         /// 异步批量加载多个物品的图标
         /// </summary>
-        public async Task<Dictionary<BaseItem, Sprite>> LoadMultipleItemIcons(BaseItem[] items)
+        public async Task<Dictionary<BaseItemConfig, Sprite>> LoadMultipleItemIcons(BaseItemConfig[] items)
         {
-            Dictionary<BaseItem, Sprite> result = new Dictionary<BaseItem, Sprite>();
+            Dictionary<BaseItemConfig, Sprite> result = new Dictionary<BaseItemConfig, Sprite>();
             List<Task<Sprite>> loadTasks = new List<Task<Sprite>>();
             
             // 启动所有加载任务

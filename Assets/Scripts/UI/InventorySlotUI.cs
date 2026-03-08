@@ -75,7 +75,7 @@ namespace Immortal.UI
                 itemIcon.enabled = hasItem;
                 if (hasItem)
                 {
-                    var sprite = IconManager.GetInstance().LoadItemIconSync(item);
+                    var sprite = IconManager.GetInstance().LoadItemIconSync(item.config);
                     itemIcon.sprite = sprite;
                 }
             }
@@ -106,13 +106,16 @@ namespace Immortal.UI
         public int GetCurrentQuantity()
         {
             if (isQuickBar)
-                return quickBarSlot?.linkedSlot?.quantity ?? 0;
-            return slot?.quantity ?? 0;
+            {
+                var linked = quickBarSlot?.linkedSlot?.item;
+                return linked is StackableItem si ? si.quantity : (linked != null ? 1 : 0);
+            }
+            return slot?.Quantity ?? 0;
         }
 
         public bool HasItem() => GetCurrentItem() != null;
 
-        public InventorySlot  GetSlot()        => slot;
+        public InventorySlot  GetSlot()        => isQuickBar ? quickBarSlot?.linkedSlot : slot;
         public QuickBarSlot   GetQuickBarSlot() => quickBarSlot;
         public int            GetSlotIndex()   => slotIndex;
 
@@ -195,6 +198,13 @@ namespace Immortal.UI
             if (!IsInteractionEnabled() || !HasItem()) return;
             CancelPendingSingleClick();
 
+            // 若 Inspector 未赋值则自动查找根 Canvas
+            if (rootCanvas == null)
+            {
+                var c = GetComponentInParent<Canvas>();
+                if (c != null) rootCanvas = c.rootCanvas;
+            }
+
             // 创建跟随鼠标的幻影
             if (itemIcon != null && rootCanvas != null)
             {
@@ -202,8 +212,14 @@ namespace Immortal.UI
                 dragProxy.transform.SetParent(rootCanvas.transform, false);
                 dragProxy.transform.SetAsLastSibling();
 
+                // 锚点和轴心都设为中心，使 anchoredPosition 与 canvas 本地坐标一致
                 var rt = dragProxy.AddComponent<RectTransform>();
-                rt.sizeDelta = ((RectTransform)itemIcon.transform).sizeDelta;
+                rt.anchorMin  = new Vector2(0.5f, 0.5f);
+                rt.anchorMax  = new Vector2(0.5f, 0.5f);
+                rt.pivot      = new Vector2(0.5f, 0.5f);
+                // 用 rect.size 取实际渲染尺寸，避免 stretch 锚点下 sizeDelta 为负
+                var iconRect  = ((RectTransform)itemIcon.transform).rect;
+                rt.sizeDelta  = iconRect.size;
 
                 var img = dragProxy.AddComponent<Image>();
                 img.sprite = itemIcon.sprite;
@@ -212,6 +228,9 @@ namespace Immortal.UI
                 var cg = dragProxy.AddComponent<CanvasGroup>();
                 cg.alpha = 0.8f;
                 cg.blocksRaycasts = false;
+
+                // 立即定位到鼠标位置，避免闪现在 (0,0)
+                MoveDragProxy(eventData);
             }
 
             if (itemIcon != null) itemIcon.color = new Color(1, 1, 1, 0.4f);
@@ -220,7 +239,18 @@ namespace Immortal.UI
         public void OnDrag(PointerEventData eventData)
         {
             if (dragProxy == null) return;
-            dragProxy.transform.position = Input.mousePosition;
+            MoveDragProxy(eventData);
+        }
+
+        private void MoveDragProxy(PointerEventData eventData)
+        {
+            if (dragProxy == null || rootCanvas == null) return;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                rootCanvas.transform as RectTransform,
+                eventData.position,
+                eventData.pressEventCamera,
+                out Vector2 localPoint);
+            ((RectTransform)dragProxy.transform).anchoredPosition = localPoint;
         }
 
         public void OnEndDrag(PointerEventData eventData)
@@ -239,12 +269,21 @@ namespace Immortal.UI
             var source = eventData.pointerDrag?.GetComponent<InventorySlotUI>();
             if (source == null || source == this) return;
 
-            // 交换两个槽位的物品（通过 Inventory API）
+            // 背包 → 背包：交换物品
             if (!isQuickBar && !source.isQuickBar && slot != null && source.slot != null)
             {
                 var inv = slot.inventory;
                 if (inv != null)
                     inv.MoveItem(source.slotIndex, slotIndex);
+                return;
+            }
+
+            // 背包 → 快捷栏：建立快捷方式（不移动物品）
+            if (isQuickBar && !source.isQuickBar && quickBarSlot != null && source.slot != null)
+            {
+                var inv = source.slot.inventory;
+                if (inv != null)
+                    inv.AddToQuickBar(source.slotIndex, slotIndex);
             }
         }
 

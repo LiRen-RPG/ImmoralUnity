@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Immortal.Item;
+using Immortal.Controllers;
 
 namespace Immortal.Item
 {
@@ -16,19 +17,24 @@ namespace Immortal.Item
     [System.Serializable]
     public class InventorySlot
     {
-        public BaseItem item;
-        public int quantity;
+        public BaseItem item;          // 物品实例（StackableItem 或 FormationInstance）
         public int slotIndex;
         [System.NonSerialized]
-        public Inventory inventory; // 添加背包引用
+        public Inventory inventory;
 
         public InventorySlot(int slotIndex, Inventory inventory)
         {
             this.item = null;
-            this.quantity = 0;
             this.slotIndex = slotIndex;
             this.inventory = inventory;
         }
+
+        /// <summary>便捷属性：可叠加物品的当前数量，非叠加物品返回 1。</summary>
+        public int Quantity => item == null ? 0 :
+            item is StackableItem s ? s.quantity : (item != null ? 1 : 0);
+
+        /// <summary>阵盘实例（若 item 是 FormationInstance 则有值）。</summary>
+        public FormationInstance FormationInstance => item as FormationInstance;
     }
 
     // 快捷栏槽位
@@ -63,11 +69,11 @@ namespace Immortal.Item
     {
         public InventoryEventType type;
         public int slotIndex;
-        public BaseItem item;
-        public int quantity;
+        public BaseItem item;       // 实例引用
+        public int quantity;        // 便于日志/UI：变动的数量
         public int fromSlot;
         public int toSlot;
-        public int quickBarSlotIndex; // 快捷栏槽位索引（用于快捷栏相关事件）
+        public int quickBarSlotIndex;
 
         public InventoryEvent(InventoryEventType type, int slotIndex = InventoryConstants.INVALID_SLOT_INDEX)
         {
@@ -161,60 +167,56 @@ namespace Immortal.Item
             }
         }
 
-        // 检查物品是否可堆叠
-        private bool IsStackable(BaseItem item)
+        // 检查物品是否可加栈（基于配置）
+        private bool IsStackable(BaseItemConfig config)
         {
-            return item.stackable && item.maxStack > 1;
+            return config != null && config.stackable && config.maxStack > 1;
         }
 
         // 获取物品的最大堆叠数量
-        private int GetMaxStack(BaseItem item)
+        private int GetMaxStack(BaseItemConfig config)
         {
-            return item.maxStack;
+            return config?.maxStack ?? 1;
         }
 
         // 尝试向指定槽位堆叠物品（槽位必须已有相同物品）
-        private int TryStackToSlot(BaseItem item, int quantity, InventorySlot slot)
+        private int TryStackToSlot(BaseItemConfig config, int quantity, InventorySlot slot)
         {
-            if (slot.item == null || slot.item.id != item.id || !IsStackable(item))
-            {
+            if (slot.item == null || !(slot.item is StackableItem si) ||
+                si.ConfigId != config.id || !IsStackable(config))
                 return 0;
-            }
 
-            int maxStack = GetMaxStack(item);
-            int canAdd = Mathf.Min(quantity, maxStack - slot.quantity);
-
-            if (canAdd > 0)
-            {
-                slot.quantity += canAdd;
-            }
-
+            int maxStack = GetMaxStack(config);
+            int canAdd = Mathf.Min(quantity, maxStack - si.quantity);
+            if (canAdd > 0) si.quantity += canAdd;
             return canAdd;
         }
 
-        // 向空槽位添加物品
-        private int AddToEmptySlot(BaseItem item, int quantity, InventorySlot slot)
+        // 向空槽位添加物品，返回实际添加数量
+        private int AddToEmptySlot(BaseItemConfig config, int quantity, InventorySlot slot)
         {
-            if (slot.item != null)
-            {
-                return 0; // 槽位不为空
-            }
+            if (slot.item != null) return 0;
 
-            if (IsStackable(item))
+            if (IsStackable(config))
             {
-                int maxStack = GetMaxStack(item);
-                int addQuantity = Mathf.Min(quantity, maxStack);
-                slot.item = item;
-                slot.quantity = addQuantity;
-                return addQuantity;
+                int addQty = Mathf.Min(quantity, GetMaxStack(config));
+                slot.item = new StackableItem(config, addQty);
+                return addQty;
+            }
+            else if (config is Immortal.Item.FormationConfig || config?.type == ItemType.Formation)
+            {
+                if (quantity >= 1)
+                {
+                    slot.item = new Immortal.Controllers.FormationInstance(config.id);
+                    return 1;
+                }
+                return 0;
             }
             else
             {
-                // 不可堆叠物品，只能放一个
                 if (quantity >= 1)
                 {
-                    slot.item = item;
-                    slot.quantity = 1;
+                    slot.item = new StackableItem(config, 1);
                     return 1;
                 }
                 return 0;
@@ -222,23 +224,17 @@ namespace Immortal.Item
         }
 
         // 查找可以堆叠的槽位
-        private int FindStackableSlot(BaseItem item)
+        private int FindStackableSlot(BaseItemConfig config)
         {
-            if (!IsStackable(item))
-            {
-                return InventoryConstants.INVALID_SLOT_INDEX;
-            }
+            if (!IsStackable(config)) return InventoryConstants.INVALID_SLOT_INDEX;
 
             for (int i = 0; i < slots.Length; i++)
             {
                 var slot = slots[i];
-                if (slot.item != null && slot.item.id == item.id)
+                if (slot.item is StackableItem si && si.ConfigId == config.id)
                 {
-                    int maxStack = GetMaxStack(item);
-                    if (slot.quantity < maxStack)
-                    {
+                    if (si.quantity < GetMaxStack(config))
                         return i;
-                    }
                 }
             }
             return InventoryConstants.INVALID_SLOT_INDEX;
@@ -257,35 +253,27 @@ namespace Immortal.Item
             return InventoryConstants.INVALID_SLOT_INDEX;
         }
 
-        // 添加物品到背包
-        public bool AddItem(BaseItem item, int quantity = 1)
+        // 添加物品到背包（从配置创建实例）
+        public bool AddItem(BaseItemConfig config, int quantity = 1)
         {
-            if (quantity <= 0)
-            {
-                return false;
-            }
+            if (config == null || quantity <= 0) return false;
 
             int remainingQuantity = quantity;
 
             // 如果物品可堆叠，先尝试堆叠到现有槽位
-            if (IsStackable(item))
+            if (IsStackable(config))
             {
                 for (int i = 0; i < slots.Length && remainingQuantity > 0; i++)
                 {
                     var slot = slots[i];
-                    if (slot.item != null && slot.item.id == item.id)
+                    if (slot.item is StackableItem si && si.ConfigId == config.id)
                     {
-                        int stackedQuantity = TryStackToSlot(item, remainingQuantity, slot);
-
+                        int stackedQuantity = TryStackToSlot(config, remainingQuantity, slot);
                         if (stackedQuantity > 0)
                         {
                             remainingQuantity -= stackedQuantity;
-
                             EmitEvent(new InventoryEvent(InventoryEventType.SlotChanged, i)
-                            {
-                                item = item,
-                                quantity = slot.quantity
-                            });
+                                { item = slot.item, quantity = si.quantity });
                         }
                     }
                 }
@@ -296,115 +284,84 @@ namespace Immortal.Item
             {
                 int emptySlotIndex = FindEmptySlot();
                 if (emptySlotIndex == InventoryConstants.INVALID_SLOT_INDEX)
-                {
-                    // 背包已满，返回是否完全添加成功
                     return remainingQuantity == 0;
-                }
 
                 var emptySlot = slots[emptySlotIndex];
-                int addedQuantity = AddToEmptySlot(item, remainingQuantity, emptySlot);
+                int addedQuantity = AddToEmptySlot(config, remainingQuantity, emptySlot);
 
                 if (addedQuantity > 0)
                 {
                     remainingQuantity -= addedQuantity;
-
                     EmitEvent(new InventoryEvent(InventoryEventType.ItemAdded, emptySlotIndex)
-                    {
-                        item = item,
-                        quantity = addedQuantity
-                    });
+                        { item = emptySlot.item, quantity = addedQuantity });
                 }
-                else
-                {
-                    // 如果添加失败，跳出循环
-                    break;
-                }
+                else break;
             }
 
-            return remainingQuantity == 0; // 如果所有物品都成功添加，返回true
+            return remainingQuantity == 0;
         }
 
-        // 向指定槽位添加物品
-        public bool AddItemToSlot(BaseItem item, int quantity, int slotIndex)
+        // 向指定槽位添加物品（从配置创建实例）
+        public bool AddItemToSlot(BaseItemConfig config, int quantity, int slotIndex)
         {
-            if (slotIndex < 0 || slotIndex >= slots.Length || quantity <= 0)
-            {
+            if (slotIndex < 0 || slotIndex >= slots.Length || config == null || quantity <= 0)
                 return false;
-            }
 
             var slot = slots[slotIndex];
 
-            // 如果槽位为空，直接添加
             if (slot.item == null)
             {
-                int addedQuantity = AddToEmptySlot(item, quantity, slot);
-
+                int addedQuantity = AddToEmptySlot(config, quantity, slot);
                 if (addedQuantity > 0)
                 {
                     EmitEvent(new InventoryEvent(InventoryEventType.ItemAdded, slotIndex)
-                    {
-                        item = item,
-                        quantity = addedQuantity
-                    });
-
-                    return addedQuantity == quantity; // 如果没有完全添加，返回false
+                        { item = slot.item, quantity = addedQuantity });
+                    return addedQuantity == quantity;
                 }
-
                 return false;
             }
 
-            // 如果槽位有物品，尝试堆叠
-            int stackedQuantity = TryStackToSlot(item, quantity, slot);
-
+            int stackedQuantity = TryStackToSlot(config, quantity, slot);
             if (stackedQuantity > 0)
             {
                 EmitEvent(new InventoryEvent(InventoryEventType.SlotChanged, slotIndex)
-                {
-                    item = item,
-                    quantity = slot.quantity
-                });
-
-                return stackedQuantity == quantity; // 如果没有完全添加，返回false
+                    { item = slot.item, quantity = slot.Quantity });
+                return stackedQuantity == quantity;
             }
-
-            return false; // 无法添加到此槽位
+            return false;
         }
 
         // 移除物品
         public bool RemoveItem(int slotIndex, int quantity = 1)
         {
-            if (slotIndex < 0 || slotIndex >= slots.Length)
-            {
-                return false;
-            }
+            if (slotIndex < 0 || slotIndex >= slots.Length) return false;
 
             var slot = slots[slotIndex];
-            if (slot.item == null || slot.quantity < quantity)
+            if (slot.item == null || slot.Quantity < quantity) return false;
+
+            if (slot.item is StackableItem si)
             {
-                return false;
-            }
-
-            slot.quantity -= quantity;
-
-            if (slot.quantity <= 0)
-            {
-                var removedItem = slot.item;
-                slot.item = null;
-                slot.quantity = 0;
-
-                EmitEvent(new InventoryEvent(InventoryEventType.ItemRemoved, slotIndex)
+                si.quantity -= quantity;
+                if (si.quantity <= 0)
                 {
-                    item = removedItem,
-                    quantity = quantity
-                });
+                    var removed = slot.item;
+                    slot.item = null;
+                    EmitEvent(new InventoryEvent(InventoryEventType.ItemRemoved, slotIndex)
+                        { item = removed, quantity = quantity });
+                }
+                else
+                {
+                    EmitEvent(new InventoryEvent(InventoryEventType.SlotChanged, slotIndex)
+                        { item = slot.item, quantity = si.quantity });
+                }
             }
             else
             {
-                EmitEvent(new InventoryEvent(InventoryEventType.SlotChanged, slotIndex)
-                {
-                    item = slot.item,
-                    quantity = slot.quantity
-                });
+                // Non-stackable (FormationInstance etc.) — remove entire item
+                var removed = slot.item;
+                slot.item = null;
+                EmitEvent(new InventoryEvent(InventoryEventType.ItemRemoved, slotIndex)
+                    { item = removed, quantity = 1 });
             }
 
             return true;
@@ -416,83 +373,49 @@ namespace Immortal.Item
             if (fromSlot < 0 || fromSlot >= slots.Length ||
                 toSlot < 0 || toSlot >= slots.Length ||
                 fromSlot == toSlot)
-            {
                 return false;
-            }
 
             var sourceSlot = slots[fromSlot];
             var targetSlot = slots[toSlot];
 
-            if (sourceSlot.item == null)
-            {
-                return false;
-            }
+            if (sourceSlot.item == null) return false;
 
-            // 如果目标槽位为空，直接移动
+            // 目标槽位为空，直接移动
             if (targetSlot.item == null)
             {
                 targetSlot.item = sourceSlot.item;
-                targetSlot.quantity = sourceSlot.quantity;
                 sourceSlot.item = null;
-                sourceSlot.quantity = 0;
 
                 EmitEvent(new InventoryEvent(InventoryEventType.ItemMoved, toSlot)
-                {
-                    fromSlot = fromSlot,
-                    toSlot = toSlot,
-                    item = targetSlot.item,
-                    quantity = targetSlot.quantity
-                });
-
+                    { fromSlot = fromSlot, toSlot = toSlot, item = targetSlot.item, quantity = targetSlot.Quantity });
                 return true;
             }
 
-            // 如果目标槽位有物品，检查是否可以堆叠
-            if (sourceSlot.item.id == targetSlot.item.id && IsStackable(sourceSlot.item))
+            // 尝试堆叠
+            if (sourceSlot.item is StackableItem src && targetSlot.item is StackableItem dst &&
+                src.ConfigId == dst.ConfigId)
             {
-                int maxStack = GetMaxStack(sourceSlot.item);
-                int canStack = Mathf.Min(sourceSlot.quantity, maxStack - targetSlot.quantity);
-
+                int maxStack = src.config?.maxStack ?? 1;
+                int canStack = Mathf.Min(src.quantity, maxStack - dst.quantity);
                 if (canStack > 0)
                 {
-                    targetSlot.quantity += canStack;
-                    sourceSlot.quantity -= canStack;
-
-                    if (sourceSlot.quantity <= 0)
-                    {
-                        sourceSlot.item = null;
-                        sourceSlot.quantity = 0;
-                    }
+                    dst.quantity += canStack;
+                    src.quantity -= canStack;
+                    if (src.quantity <= 0) sourceSlot.item = null;
 
                     EmitEvent(new InventoryEvent(InventoryEventType.ItemMoved, toSlot)
-                    {
-                        fromSlot = fromSlot,
-                        toSlot = toSlot,
-                        item = targetSlot.item,
-                        quantity = targetSlot.quantity
-                    });
-
+                        { fromSlot = fromSlot, toSlot = toSlot, item = targetSlot.item, quantity = targetSlot.Quantity });
                     return true;
                 }
             }
 
             // 交换物品位置
             var tempItem = targetSlot.item;
-            int tempQuantity = targetSlot.quantity;
-
             targetSlot.item = sourceSlot.item;
-            targetSlot.quantity = sourceSlot.quantity;
             sourceSlot.item = tempItem;
-            sourceSlot.quantity = tempQuantity;
 
             EmitEvent(new InventoryEvent(InventoryEventType.ItemMoved, toSlot)
-            {
-                fromSlot = fromSlot,
-                toSlot = toSlot,
-                item = targetSlot.item,
-                quantity = targetSlot.quantity
-            });
-
+                { fromSlot = fromSlot, toSlot = toSlot, item = targetSlot.item, quantity = targetSlot.Quantity });
             return true;
         }
 
@@ -533,15 +456,15 @@ namespace Immortal.Item
         // 查找物品
         public InventorySlot[] FindItem(string itemId)
         {
-            return slots.Where(slot => slot.item != null && slot.item.id == itemId).ToArray();
+            return slots.Where(slot => slot.item != null && slot.item.ConfigId == itemId).ToArray();
         }
 
         // 获取物品总数量
         public int GetItemCount(string itemId)
         {
             return slots
-                .Where(slot => slot.item != null && slot.item.id == itemId)
-                .Sum(slot => slot.quantity);
+                .Where(slot => slot.item != null && slot.item.ConfigId == itemId)
+                .Sum(slot => slot.Quantity);
         }
 
         // 检查是否有足够的物品
@@ -550,85 +473,67 @@ namespace Immortal.Item
             return GetItemCount(itemId) >= quantity;
         }
 
-        // 使用物品（从背包中移除并触发使用逻辑）
+        // 使用物品
         public bool UseItem(int slotIndex, int quantity = 1)
         {
-            if (slotIndex < 0 || slotIndex >= slots.Length)
-            {
-                return false;
-            }
-
+            if (slotIndex < 0 || slotIndex >= slots.Length) return false;
             var slot = slots[slotIndex];
-            if (slot.item == null || slot.quantity < quantity)
-            {
-                return false;
-            }
+            if (slot.item == null || slot.Quantity < quantity) return false;
 
-            // 保存物品引用用于日志
             var usedItem = slot.item;
-
-            // 从背包中移除物品
             bool success = RemoveItem(slotIndex, quantity);
-            if (!success)
-            {
-                return false;
-            }
-
-            Debug.Log($"使用物品: {usedItem.name} x{quantity}");
-            return true;
+            if (success) Debug.Log($"使用物品: {usedItem.Name} x{quantity}");
+            return success;
         }
 
         // 清空背包
         public void Clear()
         {
-            // 先清空快捷栏
             ClearQuickBar();
-
-            // 然后清空背包
             for (int i = 0; i < slots.Length; i++)
-            {
-                if (slots[i].item != null)
-                {
-                    RemoveItem(i, slots[i].quantity);
-                }
-            }
+                if (slots[i].item != null) RemoveItem(i, slots[i].Quantity);
         }
 
         // 整理背包（将相同物品堆叠）
         public void Organize()
         {
-            // 获取所有物品
-            var allSlots = GetAllSlots();
-            var itemGroups = new Dictionary<string, (BaseItem item, int totalQuantity)>();
+            var itemGroups = new Dictionary<string, (BaseItemConfig config, int totalQuantity)>();
+            var nonStackables = new List<BaseItem>();
 
-            // 按物品ID分组
-            foreach (var slot in allSlots)
+            foreach (var slot in slots)
             {
-                if (slot.item != null)
+                if (slot.item == null) continue;
+                if (slot.item is StackableItem si && si.config != null)
                 {
-                    string itemId = slot.item.id;
-                    if (itemGroups.ContainsKey(itemId))
+                    string id = si.ConfigId;
+                    if (itemGroups.ContainsKey(id))
                     {
-                        var existing = itemGroups[itemId];
-                        itemGroups[itemId] = (existing.item, existing.totalQuantity + slot.quantity);
+                        var existing = itemGroups[id];
+                        itemGroups[id] = (existing.config, existing.totalQuantity + si.quantity);
                     }
                     else
                     {
-                        itemGroups[itemId] = (slot.item, slot.quantity);
+                        itemGroups[id] = (si.config, si.quantity);
                     }
+                }
+                else
+                {
+                    nonStackables.Add(slot.item);
                 }
             }
 
-            // 清空背包
-            Clear();
+            ClearQuickBar();
+            for (int i = 0; i < slots.Length; i++) slots[i].item = null;
 
-            // 重新添加物品
             foreach (var kvp in itemGroups)
+                AddItem(kvp.Value.config, kvp.Value.totalQuantity);
+
+            foreach (var inst in nonStackables)
             {
-                AddItem(kvp.Value.item, kvp.Value.totalQuantity);
+                int empty = FindEmptySlot();
+                if (empty >= 0) slots[empty].item = inst;
             }
 
-            // 更新快捷栏引用
             UpdateQuickBarReferences();
         }
 
@@ -710,30 +615,18 @@ namespace Immortal.Item
         // 使用快捷栏中的物品
         public bool UseQuickBarItem(int quickBarSlotIndex, int quantity = 1)
         {
-            if (quickBarSlotIndex < 0 || quickBarSlotIndex >= quickBarSlots.Length)
-            {
-                return false;
-            }
+            if (quickBarSlotIndex < 0 || quickBarSlotIndex >= quickBarSlots.Length) return false;
 
             var quickBarSlot = quickBarSlots[quickBarSlotIndex];
-            if (quickBarSlot.linkedSlot == null || quickBarSlot.linkedSlot.item == null)
-            {
-                return false;
-            }
+            if (quickBarSlot.linkedSlot?.item == null) return false;
 
-            // 保存物品信息用于日志
-            string itemName = quickBarSlot.linkedSlot.item.name;
-
-            // 使用背包中的物品
+            string itemName = quickBarSlot.linkedSlot.item.Name;
             bool success = UseItem(quickBarSlot.linkedSlot.slotIndex, quantity);
-
             if (success)
             {
-                // 更新快捷栏显示
                 UpdateQuickBarSlot(quickBarSlotIndex);
                 Debug.Log($"从快捷栏使用物品: {itemName} x{quantity}");
             }
-
             return success;
         }
 
@@ -767,20 +660,17 @@ namespace Immortal.Item
             for (int i = 0; i < quickBarSlots.Length; i++)
             {
                 var quickBarSlot = quickBarSlots[i];
-                if (quickBarSlot.linkedSlot != null && quickBarSlot.linkedSlot.item != null)
+                if (quickBarSlot.linkedSlot?.item != null)
                 {
-                    // 重新查找物品在背包中的位置
-                    int newSlotIndex = FindItemSlot(quickBarSlot.linkedSlot.item.id);
+                    int newSlotIndex = FindItemSlot(quickBarSlot.linkedSlot.item.ConfigId);
                     if (newSlotIndex != InventoryConstants.INVALID_SLOT_INDEX)
                     {
-                        // 更新引用到新的背包槽位
                         quickBarSlot.linkedSlot = slots[newSlotIndex];
                         quickBarSlot.linkedSlotIndex = newSlotIndex;
                         UpdateQuickBarSlot(i);
                     }
                     else
                     {
-                        // 物品不在背包中了，清空快捷栏槽位
                         RemoveFromQuickBar(i);
                     }
                 }
@@ -791,12 +681,7 @@ namespace Immortal.Item
         private int FindItemSlot(string itemId)
         {
             for (int i = 0; i < slots.Length; i++)
-            {
-                if (slots[i].item != null && slots[i].item.id == itemId)
-                {
-                    return i;
-                }
-            }
+                if (slots[i].item != null && slots[i].item.ConfigId == itemId) return i;
             return InventoryConstants.INVALID_SLOT_INDEX;
         }
 
@@ -813,8 +698,8 @@ namespace Immortal.Item
         public int GetQuickBarItemCount(string itemId)
         {
             return quickBarSlots
-                .Where(slot => slot.linkedSlot != null && slot.linkedSlot.item != null && slot.linkedSlot.item.id == itemId)
-                .Sum(slot => slot.linkedSlot?.quantity ?? 0);
+                .Where(slot => slot.linkedSlot?.item != null && slot.linkedSlot.item.ConfigId == itemId)
+                .Sum(slot => slot.linkedSlot?.Quantity ?? 0);
         }
 
         // 检查快捷栏中是否有指定物品

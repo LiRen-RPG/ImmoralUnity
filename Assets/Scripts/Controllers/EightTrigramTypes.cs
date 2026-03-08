@@ -32,85 +32,51 @@ namespace Immortal.Controllers
     }
 
     /// <summary>
-    /// 八卦阵盘数据，管理各卦位的物品槽与技能信息
+    /// 单个卦位的槽位数据（3 个物品槽），序列化时保存物品 ID，运行时缓存 BaseItemConfig 引用。
     /// </summary>
     [System.Serializable]
-    public class EightTrigramsFormationPlate
+    public class TrigramSlotData
     {
-        // 每个卦位对应 3 个槽位，共 8 卦 × 3 槽 = 24 槽
-        private const int SLOTS_PER_TRIGRAM = 3;
-        private const int TRIGRAM_COUNT = 8;
+        public string[] itemIds = new string[3];    // 序列化：按槽序存储物品 ID
 
-        // 各槽位存储的物品（使用 BaseItem 基类）
-        private Immortal.Item.BaseItem[] slots = new Immortal.Item.BaseItem[TRIGRAM_COUNT * SLOTS_PER_TRIGRAM];
+        [System.NonSerialized]
+        public Immortal.Item.BaseItemConfig[] items;      // 运行时缓存，通过 Hydrate() 填充
 
-        // 各卦位绑定的技能
-        private Dictionary<EightTrigramsType, SkillConfig> trigramSkills =
-            new Dictionary<EightTrigramsType, SkillConfig>();
+        public TrigramSlotData() { items = new Immortal.Item.BaseItemConfig[3]; }
 
-        /// <summary>
-        /// 获取指定卦位的所有槽位索引
-        /// </summary>
-        public int[] GetSlotIndicesForTrigram(EightTrigramsType trigram)
+        public Immortal.Item.BaseItemConfig Get(int slot)
         {
-            int baseIndex = (int)trigram * SLOTS_PER_TRIGRAM;
-            int[] indices = new int[SLOTS_PER_TRIGRAM];
-            for (int i = 0; i < SLOTS_PER_TRIGRAM; i++)
-            {
-                indices[i] = baseIndex + i;
-            }
-            return indices;
+            if (items == null) items = new Immortal.Item.BaseItemConfig[3];
+            return (slot >= 0 && slot < 3) ? items[slot] : null;
         }
 
-        /// <summary>
-        /// 获取指定槽位的物品
-        /// </summary>
-        public Immortal.Item.BaseItem GetItem(int slotIndex)
+        public void Set(int slot, Immortal.Item.BaseItemConfig item)
         {
-            if (slotIndex < 0 || slotIndex >= slots.Length) return null;
-            return slots[slotIndex];
+            if (slot < 0 || slot >= 3) return;
+            if (items == null) items = new Immortal.Item.BaseItemConfig[3];
+            items[slot]    = item;
+            itemIds[slot]  = item?.id;
         }
 
-        /// <summary>
-        /// 在指定槽位放入物品
-        /// </summary>
-        public void SetItem(int slotIndex, Immortal.Item.BaseItem item)
+        public int ItemCount()
         {
-            if (slotIndex < 0 || slotIndex >= slots.Length) return;
-            slots[slotIndex] = item;
+            if (items == null) return 0;
+            int n = 0;
+            foreach (var it in items) if (it != null) n++;
+            return n;
         }
 
-        /// <summary>
-        /// 获取指定卦位的等级（由该卦位拥有物品的数量决定，0 ~ MAX_EFFECT_LEVELS-1）
-        /// </summary>
-        public int? GetTrigramLevel(EightTrigramsType trigram)
+        /// <summary>将序列化的 itemIds 通过 ItemDatabase 还原为运行时引用。</summary>
+        public void Hydrate()
         {
-            int[] slotIndices = GetSlotIndicesForTrigram(trigram);
-            int itemCount = 0;
-            foreach (int idx in slotIndices)
-            {
-                if (slots[idx] != null) itemCount++;
-            }
-            if (itemCount == 0) return null;
-            // 等级 0、1、2 对应物品数 1、2、3
-            return Mathf.Clamp(itemCount - 1, 0, 2);
-        }
-
-        /// <summary>
-        /// 获取指定卦位绑定的技能（如未绑定则返回 null）
-        /// </summary>
-        public SkillConfig GetTrigramSkill(EightTrigramsType trigram)
-        {
-            trigramSkills.TryGetValue(trigram, out SkillConfig skill);
-            return skill;
-        }
-
-        /// <summary>
-        /// 为指定卦位绑定技能
-        /// </summary>
-        public void SetTrigramSkill(EightTrigramsType trigram, SkillConfig skill)
-        {
-            trigramSkills[trigram] = skill;
+            if (items == null) items = new Immortal.Item.BaseItemConfig[3];
+            for (int i = 0; i < 3; i++)
+                items[i] = !string.IsNullOrEmpty(itemIds?[i])
+                    ? Immortal.Item.ItemDatabase.Get(itemIds[i])
+                    : null;
         }
     }
+
+    // FormationInstance 已移至 Assets/Scripts/Item/ItemInstance.cs
+    // （与 BaseItem / StackableItem 共同存放于同一文件中）
 }

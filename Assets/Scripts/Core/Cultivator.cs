@@ -291,11 +291,10 @@ namespace Immortal.Core
 
         public Cultivator()
         {
-            // 用于反序列化
+            // 用于反序列化，lifespan 由反序列化器从 JSON 填入，不在此处调用 Resources.Load
             activeDebuffs = new List<Debuff>();
             skills = new List<Skill>();
             cultivationRealm = CultivationRealm.QiRefining;
-            lifespan = CultivationRealmUtils.GetLifespan(cultivationRealm);
         }
 
         public Cultivator(
