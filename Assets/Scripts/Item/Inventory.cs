@@ -441,6 +441,14 @@ namespace Immortal.Item
             return capacity;
         }
 
+        /// <summary>手动触发指定槽位的 SlotChanged 事件，用于跨背包拖拽后刷新 UI。</summary>
+        public void NotifySlotChanged(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= slots.Length) return;
+            EmitEvent(new InventoryEvent(InventoryEventType.SlotChanged, slotIndex)
+                { item = slots[slotIndex].item, quantity = slots[slotIndex].Quantity });
+        }
+
         // 获取已使用的槽位数量
         public int GetUsedSlots()
         {

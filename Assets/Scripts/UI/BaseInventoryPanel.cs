@@ -160,5 +160,8 @@ namespace Immortal.UI
             doubleClickCallback = cb;
             foreach (var sui in slotUIs) sui?.SetDoubleClickCallback(cb);
         }
+
+        public Inventory GetBoundInventory() => inventory;
+        public IReadOnlyList<InventorySlotUI> GetSlotUIs() => slotUIs;
     }
 }

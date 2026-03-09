@@ -27,7 +27,18 @@ namespace Immortal.UI
         [SerializeField] private InventorySlotUI[] itemSlots = new InventorySlotUI[3];
 
         [Header("槽位透明度")]
-        [SerializeField, Range(0f, 1f)] private float slotsAlpha = 1f;
+        [SerializeField, Range(0f, 1f)] private float slotsAlpha = 1f;   // 仅控制 slotBackground
+        [SerializeField, Range(0f, 1f)] private float iconsAlpha = 1f;   // 仅控制 itemIcon
+
+        [Header("爻描边物体（每爻一个，Outline 子物体）")]
+        [SerializeField] private GameObject yao1Outline;  // yao1 的 Outline 子物体
+        [SerializeField] private GameObject yao2Outline;  // yao2 的 Outline 子物体
+        [SerializeField] private GameObject yao3Outline;  // yao3 的 Outline 子物体
+
+        [Header("爻颜色")]
+        [SerializeField] private Color yaoNormalColor    = Color.gray;
+        [SerializeField] private Color yaoHighlightColor = Color.white;
+        [SerializeField] private Color yaoOutlineColor   = Color.white;
 
         // 对应的卦类型
         private EightTrigramsType trigramType;
@@ -44,30 +55,27 @@ namespace Immortal.UI
             "东", "东南", "南", "西南", "西", "西北", "北", "东北"
         };
 
+        // ======================== 生命周期 ========================
+
+        private void Awake()
+        {
+            if (yao1Outline != null) yao1Outline.SetActive(false);
+            if (yao2Outline != null) yao2Outline.SetActive(false);
+            if (yao3Outline != null) yao3Outline.SetActive(false);
+        }
+
         // ======================== 初始化 ========================
 
         public void SetTrigram(EightTrigramsType type, FormationInstance instance)
         {
             trigramType = type;
 
-            // 标签
             if (trigramNameLabel != null)
                 trigramNameLabel.text = TrigramNames[(int)type];
             if (positionLabel != null)
                 positionLabel.text = DirectionNames[(int)type];
 
-            // 爻贴图
             UpdateYaoSprites(type);
-
-            // 物品槽
-            if (instance != null)
-            {
-                for (int i = 0; i < itemSlots.Length && i < 3; i++)
-                {
-                    if (itemSlots[i] != null)
-                        itemSlots[i].UpdateDisplay();
-                }
-            }
         }
 
         private static readonly bool[,] YaoTable =
@@ -117,30 +125,74 @@ namespace Immortal.UI
 
         // ======================== 透明度 ========================
 
-        /// <summary>将 slotsAlpha 应用到所有物品槽的 CanvasGroup（不存在则自动添加）。</summary>
+        /// <summary>将 slotsAlpha 应用到所有槽位背景，iconsAlpha 应用到物品图标。</summary>
         public void ApplySlotsAlpha()
         {
             foreach (var slot in itemSlots)
             {
                 if (slot == null) continue;
-                var cg = slot.GetComponent<CanvasGroup>();
-                if (cg == null) cg = slot.gameObject.AddComponent<CanvasGroup>();
-                cg.alpha = slotsAlpha;
+                slot.SetBackgroundAlpha(slotsAlpha);
+                slot.SetIconAlpha(iconsAlpha);
             }
         }
 
-        private void OnValidate() => ApplySlotsAlpha();
+        private void OnValidate()
+        {
+            ApplySlotsAlpha();
+            ApplyOutlineColor();
+        }
+
+        private void ApplyOutlineColor()
+        {
+            GameObject[] outlineGOs = { yao1Outline, yao2Outline, yao3Outline };
+            foreach (var go in outlineGOs)
+            {
+                if (go == null) continue;
+                var img = go.GetComponent<Image>();
+                if (img != null) img.color = yaoOutlineColor;
+            }
+        }
+
+        // ======================== 槽位悬停 & 爻描边 ========================
+
+        /// <summary>
+        /// 为每个 itemSlot 注册悬停回调，使对应爻高亮；并刷新一次描边初始状态。
+        /// 在阵盘绑定完成后（BindTrigramSlots 末尾）调用。
+        /// </summary>
+        public void BindSlotCallbacks()
+        {
+            for (int i = 0; i < itemSlots.Length && i < 3; i++)
+            {
+                if (itemSlots[i] == null) continue;
+                int capturedI = i;
+                itemSlots[i].SetPointerEnterCallback(_ => SetHighlight(capturedI, true));
+                itemSlots[i].SetPointerExitCallback(_  => SetHighlight(capturedI, false));
+            }
+            RefreshYaoOutlines();
+        }
+
+        /// <summary>根据各槽位是否有物品，刷新爻的描边物体激活状态。</summary>
+        public void RefreshYaoOutlines()
+        {
+            for (int i = 0; i < 3; i++)
+                UpdateYaoOutline(i);
+        }
+
+        private void UpdateYaoOutline(int i)
+        {
+            GameObject[] outlineGOs = { yao1Outline, yao2Outline, yao3Outline };
+            if (i < 0 || i >= outlineGOs.Length || outlineGOs[i] == null) return;
+            bool hasItem = i < itemSlots.Length && itemSlots[i] != null && itemSlots[i].HasItem();
+            outlineGOs[i].SetActive(hasItem);
+        }
 
         // ======================== 高亮 ========================
 
         public void SetHighlight(int yaoIndex, bool highlight)
         {
             Image[] sprites = { yao1Sprite, yao2Sprite, yao3Sprite };
-            if (yaoIndex < 0 || yaoIndex >= sprites.Length) return;
-            if (sprites[yaoIndex] == null) return;
-            sprites[yaoIndex].color = highlight
-                ? new Color(1f, 0.9f, 0.2f)    // 金黄色高亮
-                : Color.white;
+            if (yaoIndex < 0 || yaoIndex >= sprites.Length || sprites[yaoIndex] == null) return;
+            sprites[yaoIndex].color = highlight ? yaoHighlightColor : yaoNormalColor;
         }
 
         public void ClearHighlight()

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Immortal.Controllers;
+using Immortal.Item;
 
 namespace Immortal.UI
 {
@@ -18,7 +19,7 @@ namespace Immortal.UI
         [Header("中心图像")]
         [SerializeField] private Image     yinYangFishImage;   // 阴阳鱼
         [SerializeField] private Image     innerFrameImage;    // 内框
-        [SerializeField] private float     spinSpeed = 30f;    // 旋转速度（度/秒）
+        [SerializeField] private float     spinSpeed = 35f;    // 旋转速度（度/秒）
 
         [Header("外圈卦象")]
         [SerializeField] private Transform          trigramsRoot;   // 8 个 TrigramUI 的父节点
@@ -30,6 +31,10 @@ namespace Immortal.UI
         [Header("关闭按钮")]
         [SerializeField] private Button closeButton;
 
+        // 阵盘专属背包（24 格：卦位 i → 槽位 i*3 ~ i*3+2）
+        private Inventory formationInventory;
+        // slotIndex → InventorySlotUI，用于背包事件后快速刷新 UI
+        private readonly Dictionary<int, InventorySlotUI> slotUIMap = new Dictionary<int, InventorySlotUI>();
         // 内部状态
         private FormationInstance currentInstance;
         private Action            onCleared;
@@ -49,7 +54,7 @@ namespace Immortal.UI
         {
             // 阴阳鱼旋转
             if (yinYangFishImage != null)
-                yinYangFishImage.transform.Rotate(0, 0, spinSpeed * Time.deltaTime);
+                yinYangFishImage.transform.Rotate(0, 0, -spinSpeed * Time.deltaTime);
         }
 
         // ======================== 切换阵盘 ========================
@@ -64,7 +69,75 @@ namespace Immortal.UI
             currentInstance = instance;
             onCleared       = clearCallback;
 
+            RebuildFormationInventory();
             BuildOrRefreshTrigrams();
+        }
+
+        // ======================== 阵盘背包 ========================
+
+        private void RebuildFormationInventory()
+        {
+            if (formationInventory == null)
+            {
+                formationInventory = new Inventory(24, 0);
+            }
+            else
+            {
+                formationInventory.RemoveEventListener(InventoryEventType.SlotChanged,  OnFormationSlotChanged);
+                formationInventory.RemoveEventListener(InventoryEventType.ItemAdded,    OnFormationSlotChanged);
+                formationInventory.RemoveEventListener(InventoryEventType.ItemRemoved,  OnFormationSlotChanged);
+            }
+
+            // 从 FormationInstance 数据对应填充背包槽位
+            for (int t = 0; t < 8; t++)
+            {
+                var type = (EightTrigramsType)t;
+                for (int s = 0; s < 3; s++)
+                {
+                    var config = currentInstance?.GetItem(type, s);
+                    var fslot  = formationInventory.GetSlot(t * 3 + s);
+                    if (fslot != null)
+                        fslot.item = config != null ? new StackableItem(config, 1) : null;
+                }
+            }
+
+            formationInventory.AddEventListener(InventoryEventType.SlotChanged,  OnFormationSlotChanged);
+            formationInventory.AddEventListener(InventoryEventType.ItemAdded,    OnFormationSlotChanged);
+            formationInventory.AddEventListener(InventoryEventType.ItemRemoved,  OnFormationSlotChanged);
+            formationInventory.AddEventListener(InventoryEventType.ItemMoved,    OnFormationItemMoved);
+        }
+
+        private void OnFormationSlotChanged(InventoryEvent evt)
+        {
+            if (currentInstance == null || formationInventory == null) return;
+            SyncSlotToInstance(evt.slotIndex);
+            RefreshSlotUI(evt.slotIndex);
+        }
+
+        private void OnFormationItemMoved(InventoryEvent evt)
+        {
+            if (currentInstance == null || formationInventory == null) return;
+            SyncSlotToInstance(evt.fromSlot);
+            SyncSlotToInstance(evt.toSlot);
+            RefreshSlotUI(evt.fromSlot);
+            RefreshSlotUI(evt.toSlot);
+        }
+
+        private void SyncSlotToInstance(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= 24) return;
+            int t = slotIndex / 3;
+            int s = slotIndex % 3;
+            var fslot = formationInventory.GetSlot(slotIndex);
+            currentInstance.SetItem((EightTrigramsType)t, s, fslot?.item?.config);
+            if (t < trigramUIs.Count)
+                trigramUIs[t].RefreshYaoOutlines();
+        }
+
+        private void RefreshSlotUI(int slotIndex)
+        {
+            if (slotUIMap.TryGetValue(slotIndex, out var slotUI))
+                slotUI.UpdateDisplay();
         }
 
         // ======================== 构建卦象 ========================
@@ -130,32 +203,106 @@ namespace Immortal.UI
 
         private void BindTrigramSlots(TrigramUI trigramUI, EightTrigramsType type)
         {
-            if (currentInstance == null) return;
+            if (currentInstance == null || formationInventory == null)
+            {
+                Debug.LogWarning($"[Formation] BindTrigramSlots skipped: instance={currentInstance != null} inv={formationInventory != null}");
+                return;
+            }
 
             var slots = trigramUI.GetItemSlots();
+            Debug.Log($"[Formation] BindTrigramSlots type={type} slotsLen={slots?.Length}");
             for (int i = 0; i < slots.Length && i < 3; i++)
             {
                 if (slots[i] == null) continue;
 
-                slots[i].UpdateDisplay();
+                int invSlotIdx = (int)type * 3 + i;
+                Debug.Log($"[Formation] Binding slot type={type} i={i} invIdx={invSlotIdx} go={slots[i].gameObject.name}");
 
-                int capturedSlot = i;
-                EightTrigramsType capturedType = type;
-                slots[i].SetSingleClickCallback((_, sui) =>
+                // 绑定到阵盘专属背包的对应槽位
+                slots[i].Initialize(formationInventory.GetSlot(invSlotIdx));
+                slots[i].SetFormationSlot(true);   // 标记为阵盘槽，禁止拖出阵盘外
+
+                // 记录映射，供事件驱动刷新
+                slotUIMap[invSlotIdx] = slots[i];
+
+                // 跨背包拖入：从玩家背包拖入时复制配置到阵盘槽位（不消耗原物品）
+                // 绑定完成后注册悬停→爻高亮 & 描边（每次 BindTrigramSlots 都重新注册）
+                int capturedIdx     = invSlotIdx;
+                var capturedSlotUI  = slots[i];
+
+                // 右键 / 双击：将物品放回玩家背包
+                slots[i].SetRightClickCallback((_, __) => ReturnItemToInventory(capturedIdx));
+                slots[i].SetDoubleClickCallback((_, __) => ReturnItemToInventory(capturedIdx));
+
+                slots[i].SetDropCallback(source =>
                 {
-                    Debug.Log($"点击阵盘槽位 [{capturedType}][{capturedSlot}]");
+                    var sourceItem = source.GetCurrentItem();
+                    Debug.Log($"[Formation] DropCallback fired: source={source.gameObject.name} item={sourceItem?.config?.name ?? "null"} targetIdx={capturedIdx}");
+                    if (sourceItem?.config == null) return;
+                    var fslot = formationInventory.GetSlot(capturedIdx);
+                    if (fslot == null) return;
+                    fslot.item = new StackableItem(sourceItem.config, 1);
+                    formationInventory.NotifySlotChanged(capturedIdx);
+                    capturedSlotUI.UpdateDisplay();   // 强制刷新槽位图标
+
+                    // 可堆叠物品：原背包数量 -1（不足1时整格清除）
+                    if (sourceItem is StackableItem)
+                    {
+                        var srcSlot = source.GetSlot();
+                        srcSlot?.inventory?.RemoveItem(srcSlot.slotIndex, 1);
+                        source.UpdateDisplay();
+                    }
                 });
             }
+            // 注册悬停→爻高亮 & 描边初始状态
+            trigramUI.BindSlotCallbacks();
+        }
+
+        // ======================== 物品退回 ========================
+
+        /// <summary>
+        /// 将阵盘槽位中的物品放回玩家背包（右键 / 双击触发）。
+        /// 可叠加物品：优先叠入已有堆，无处叠时放入空格；不可叠加物品直接放入空格。
+        /// </summary>
+        private void ReturnItemToInventory(int slotIndex)
+        {
+            if (formationInventory == null) return;
+            var fslot = formationInventory.GetSlot(slotIndex);
+            if (fslot?.item == null) return;
+
+            var playerInventory = UIManager.Instance?.GetCurrentInventory();
+            if (playerInventory == null)
+            {
+                Debug.LogWarning("[Formation] ReturnItemToInventory: 无法获取玩家背包");
+                return;
+            }
+
+            var config = fslot.item.config;
+            if (config == null) return;
+
+            // AddItem 内部已按「先找可叠加槽，再找空槽」顺序处理
+            if (playerInventory.AddItem(config, 1))
+                formationInventory.RemoveItem(slotIndex, 1);
+            else
+                Debug.LogWarning("[Formation] 玩家背包已满，无法放回物品");
         }
 
         // ======================== 关闭 ========================
 
         private void OnCloseClicked()
         {
+            // 停止监听阵盘背包事件
+            if (formationInventory != null)
+            {
+                formationInventory.RemoveEventListener(InventoryEventType.SlotChanged,  OnFormationSlotChanged);
+                formationInventory.RemoveEventListener(InventoryEventType.ItemAdded,    OnFormationSlotChanged);
+                formationInventory.RemoveEventListener(InventoryEventType.ItemRemoved,  OnFormationSlotChanged);
+                formationInventory.RemoveEventListener(InventoryEventType.ItemMoved,    OnFormationItemMoved);
+            }
+
             currentInstance = null;
             gameObject.SetActive(false);
 
-            // 触发外部清理回调（重新启用背包槽交互）
             onCleared?.Invoke();
             onCleared = null;
         }

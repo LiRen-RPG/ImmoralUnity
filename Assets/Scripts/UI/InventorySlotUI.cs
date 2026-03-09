@@ -34,30 +34,38 @@ namespace Immortal.UI
         private Action<int, InventorySlotUI> onImmediateClick;
         private Action<int, InventorySlotUI> onSingleClick;
         private Action<int, InventorySlotUI> onDoubleClick;
+        private Action<int, InventorySlotUI> onRightClick;           // 右键单击
+        private Action<InventorySlotUI>      onDropCallback;      // 跨背包拖入时触发
+        private Action<InventorySlotUI>      onPointerEnterCallback;  // 悬停进入
+        private Action<InventorySlotUI>      onPointerExitCallback;   // 悬停离开
 
         // ---------- 拖拽内部状态 ----------
         private float           lastClickTime;
         private const float     DoubleClickThreshold = 0.3f;
         private bool            pendingSingleClick;
-        private GameObject      dragProxy;          // 拖拽时跟随鼠标的幻影图片
+        private bool            isFormationSlot;     // 是否阵盘槽位（不允许拖出阵盘外）
+        private bool            isDragging;          // 当前是否由本槽位发起了拖拽
+        private bool            isLocked;            // 锁定状态（阵盘开启时背包槽位禁用）
 
         // ======================== 初始化 ========================
 
         /// <summary>初始化为背包槽</summary>
         public void Initialize(InventorySlot inventorySlot)
         {
-            slot        = inventorySlot;
-            isQuickBar  = false;
-            slotIndex   = inventorySlot.slotIndex;
+            slot            = inventorySlot;
+            isQuickBar      = false;
+            slotIndex       = inventorySlot.slotIndex;
+            isFormationSlot = false;
             UpdateDisplay();
         }
 
         /// <summary>初始化为快捷栏槽</summary>
         public void InitializeQuickBar(QuickBarSlot qbSlot)
         {
-            quickBarSlot = qbSlot;
-            isQuickBar   = true;
-            slotIndex    = qbSlot.slotIndex;
+            quickBarSlot    = qbSlot;
+            isQuickBar      = true;
+            slotIndex       = qbSlot.slotIndex;
+            isFormationSlot = false;
             UpdateDisplay();
         }
 
@@ -138,12 +146,72 @@ namespace Immortal.UI
         public void SetImmediateClickCallback(Action<int, InventorySlotUI> cb)  => onImmediateClick = cb;
         public void SetSingleClickCallback(Action<int, InventorySlotUI> cb)     => onSingleClick    = cb;
         public void SetDoubleClickCallback(Action<int, InventorySlotUI> cb)     => onDoubleClick    = cb;
+        public void SetRightClickCallback(Action<int, InventorySlotUI> cb)      => onRightClick     = cb;
+
+        /// <summary>注册跨背包拖入回调（从另一个 Inventory 拖来时触发）。</summary>
+        public void SetDropCallback(Action<InventorySlotUI> callback) => onDropCallback = callback;
+
+        /// <summary>标记该槽位为阵盘槽位，拖出阵盘外时显示禁止图标。</summary>
+        public void SetFormationSlot(bool value) => isFormationSlot = value;
+
+        /// <summary>
+        /// 锁定/解锁槽位交互。锁定时槽位略微变暗，且不响应悬停、点击、拖拽。
+        /// </summary>
+        public void SetLocked(bool locked)
+        {
+            isLocked = locked;
+            // 锁定时强制隐藏高亮（可能在悬停期间被锁定）
+            if (locked && highlightImage != null)
+                highlightImage.enabled = false;
+            // 锁定时将背景和图标着色为灰色，解锁时恢复白色（不改变 alpha）
+            Color tint = locked ? Color.gray : Color.white;
+            if (slotBackground != null)
+            {
+                var c = slotBackground.color;
+                slotBackground.color = new Color(tint.r, tint.g, tint.b, c.a);
+            }
+            if (itemIcon != null)
+            {
+                var c = itemIcon.color;
+                itemIcon.color = new Color(tint.r, tint.g, tint.b, c.a);
+            }
+        }
+
+        public void SetPointerEnterCallback(Action<InventorySlotUI> cb) => onPointerEnterCallback = cb;
+        public void SetPointerExitCallback(Action<InventorySlotUI> cb)  => onPointerExitCallback  = cb;
+
+        /// <summary>单独设置槽位背景图的 alpha（不影响图标）。</summary>
+        public void SetBackgroundAlpha(float alpha)
+        {
+            if (slotBackground != null)
+            {
+                var c = slotBackground.color;
+                slotBackground.color = new Color(c.r, c.g, c.b, alpha);
+            }
+        }
+
+        /// <summary>单独设置物品图标的 alpha（不影响背景）。</summary>
+        public void SetIconAlpha(float alpha)
+        {
+            if (itemIcon != null)
+            {
+                var c = itemIcon.color;
+                itemIcon.color = new Color(c.r, c.g, c.b, alpha);
+            }
+        }
 
         // ======================== 指针事件 ========================
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (!IsInteractionEnabled()) return;
+            if (!IsInteractionEnabled() || isLocked) return;
+
+            // 右键：直接触发右键回调，不走单击/双击逻辑
+            if (eventData.button == PointerEventData.InputButton.Right)
+            {
+                onRightClick?.Invoke(slotIndex, this);
+                return;
+            }
 
             // 立即回调
             onImmediateClick?.Invoke(slotIndex, this);
@@ -181,21 +249,30 @@ namespace Immortal.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            if (isLocked) return;
             if (highlightImage != null)
                 highlightImage.enabled = true;
+            onPointerEnterCallback?.Invoke(this);
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
+            if (isLocked) return;
             if (highlightImage != null)
                 highlightImage.enabled = false;
+            onPointerExitCallback?.Invoke(this);
         }
 
         // ======================== 拖拽事件 ========================
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (!IsInteractionEnabled() || !HasItem()) return;
+            if (!IsInteractionEnabled() || !HasItem() || isLocked)
+            {
+                Debug.Log($"[Drag] BLOCKED on {gameObject.name}: enabled={IsInteractionEnabled()} hasItem={HasItem()} locked={isLocked}");
+                return;
+            }
+            Debug.Log($"[Drag] BEGIN from {gameObject.name} slot={slotIndex} item={GetCurrentItem()?.config?.name}");
             CancelPendingSingleClick();
 
             // 若 Inspector 未赋值则自动查找根 Canvas
@@ -205,32 +282,19 @@ namespace Immortal.UI
                 if (c != null) rootCanvas = c.rootCanvas;
             }
 
-            // 创建跟随鼠标的幻影
+            // 通过全局 DragProxy 创建跟随鼠标的幻影
             if (itemIcon != null && rootCanvas != null)
             {
-                dragProxy = new GameObject("DragProxy");
-                dragProxy.transform.SetParent(rootCanvas.transform, false);
-                dragProxy.transform.SetAsLastSibling();
-
-                // 锚点和轴心都设为中心，使 anchoredPosition 与 canvas 本地坐标一致
-                var rt = dragProxy.AddComponent<RectTransform>();
-                rt.anchorMin  = new Vector2(0.5f, 0.5f);
-                rt.anchorMax  = new Vector2(0.5f, 0.5f);
-                rt.pivot      = new Vector2(0.5f, 0.5f);
-                // 用 rect.size 取实际渲染尺寸，避免 stretch 锚点下 sizeDelta 为负
-                var iconRect  = ((RectTransform)itemIcon.transform).rect;
-                rt.sizeDelta  = iconRect.size;
-
-                var img = dragProxy.AddComponent<Image>();
-                img.sprite = itemIcon.sprite;
-                img.raycastTarget = false;
-
-                var cg = dragProxy.AddComponent<CanvasGroup>();
-                cg.alpha = 0.8f;
-                cg.blocksRaycasts = false;
-
-                // 立即定位到鼠标位置，避免闪现在 (0,0)
-                MoveDragProxy(eventData);
+                var proxy = UIManager.Instance?.DragProxy;
+                if (proxy != null)
+                {
+                    // 用 rect.size 取实际渲染尺寸，避免 stretch 锚点下 sizeDelta 为负
+                    var iconRect = ((RectTransform)itemIcon.transform).rect;
+                    proxy.Begin(rootCanvas, itemIcon.sprite, iconRect.size,
+                                isFormationSlot, UIManager.Instance.GetStopSprite());
+                    proxy.Move(eventData); // 立即定位到鼠标位置，避免闪现在 (0,0)
+                    isDragging = true;
+                }
             }
 
             if (itemIcon != null) itemIcon.color = new Color(1, 1, 1, 0.4f);
@@ -238,28 +302,13 @@ namespace Immortal.UI
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (dragProxy == null) return;
-            MoveDragProxy(eventData);
-        }
-
-        private void MoveDragProxy(PointerEventData eventData)
-        {
-            if (dragProxy == null || rootCanvas == null) return;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                rootCanvas.transform as RectTransform,
-                eventData.position,
-                eventData.pressEventCamera,
-                out Vector2 localPoint);
-            ((RectTransform)dragProxy.transform).anchoredPosition = localPoint;
+            UIManager.Instance?.DragProxy.Move(eventData);
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            if (dragProxy != null)
-            {
-                Destroy(dragProxy);
-                dragProxy = null;
-            }
+            UIManager.Instance?.DragProxy.End();
+            isDragging = false;
             if (itemIcon != null) itemIcon.color = Color.white;
         }
 
@@ -269,12 +318,13 @@ namespace Immortal.UI
             var source = eventData.pointerDrag?.GetComponent<InventorySlotUI>();
             if (source == null || source == this) return;
 
-            // 背包 → 背包：交换物品
-            if (!isQuickBar && !source.isQuickBar && slot != null && source.slot != null)
+            Debug.Log($"[Drop] {gameObject.name}(slot={slotIndex}) ← {source.gameObject.name}(slot={source.slotIndex}) | sameInv={slot?.inventory != null && slot.inventory == source.slot?.inventory} | callback={(onDropCallback != null ? "SET" : "NULL")}");
+
+            // 背包 → 背包（同一背包）：交换物品
+            if (!isQuickBar && !source.isQuickBar && slot != null && source.slot != null
+                && slot.inventory != null && slot.inventory == source.slot.inventory)
             {
-                var inv = slot.inventory;
-                if (inv != null)
-                    inv.MoveItem(source.slotIndex, slotIndex);
+                slot.inventory.MoveItem(source.slotIndex, slotIndex);
                 return;
             }
 
@@ -284,12 +334,17 @@ namespace Immortal.UI
                 var inv = source.slot.inventory;
                 if (inv != null)
                     inv.AddToQuickBar(source.slotIndex, slotIndex);
+                return;
             }
+
+            // 跨背包 / 非背包槽：自定义处理
+            onDropCallback?.Invoke(source);
         }
 
         private void OnDestroy()
         {
-            if (dragProxy != null) Destroy(dragProxy);
+            if (isDragging)
+                UIManager.Instance?.DragProxy.End();
         }
     }
 }

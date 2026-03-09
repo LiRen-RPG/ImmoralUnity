@@ -15,6 +15,15 @@ namespace Immortal.UI
         [Header("容量显示")]
         [SerializeField] private Text capacityText; // 例如 "10/33"
 
+        [Header("关闭按钮")]
+        [SerializeField] private Button closeButton;
+
+        private void Awake()
+        {
+            if (closeButton != null)
+                closeButton.onClick.AddListener(() => inventoryPanel?.ClosePanel());
+        }
+
         private void OnEnable()
         {
             if (inventoryPanel == null)
@@ -97,9 +106,9 @@ namespace Immortal.UI
             mgr.ShowFormationUI();
             mgr.GetFormationUI()?.SwitchToFormation(instance, () =>
             {
-                slotUI.SetInteractionEnabled(true);
+                slotUI.SetLocked(false);
             });
-            slotUI.SetInteractionEnabled(false);
+            slotUI.SetLocked(true);
         }
 
         private void HandleFormationDoubleClick(BaseItem item, InventorySlotUI slotUI)
@@ -112,7 +121,11 @@ namespace Immortal.UI
             instance.Hydrate();
 
             mgr.ShowFormationUI();
-            mgr.GetFormationUI()?.SwitchToFormation(instance, null);
+            mgr.GetFormationUI()?.SwitchToFormation(instance, () =>
+            {
+                slotUI.SetLocked(false);
+            });
+            slotUI.SetLocked(true);
         }
 
         private void PerformDefaultAction(BaseItem item)

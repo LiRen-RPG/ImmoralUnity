@@ -21,12 +21,18 @@ namespace Immortal.UI
         [Header("Settings")]
         [SerializeField] private int inventoryCapacity = 30;
 
+        [Header("Drag 禁止图标")]
+        [SerializeField] private Sprite stopCursorSprite;
+
         // 当前显示背包的Actor
         private object currentActor; // ActorBase类型，使用object避免循环依赖
         private static UIManager instance;
 
         // 单例模式
         public static UIManager Instance => instance;
+
+        /// <summary>全局唯一的拖拽幻影，由各 InventorySlotUI 共享。</summary>
+        public DragProxy DragProxy { get; } = new DragProxy();
 
         private void Awake()
         {
@@ -212,6 +218,19 @@ namespace Immortal.UI
         public EightTrigramsFormationUI GetFormationUI()
         {
             return formationUI;
+        }
+
+        /// <summary>返回 Stop 图标 Sprite，供拖拽禁止提示使用。</summary>
+        public Sprite GetStopSprite() => stopCursorSprite;
+
+        /// <summary>检测屏幕坐标点是否在阵盘 UI 矩屢内。</summary>
+        public bool IsInFormationUI(Vector2 screenPoint)
+        {
+            if (formationUI == null || !formationUI.gameObject.activeSelf) return false;
+            var rt  = formationUI.GetComponent<RectTransform>();
+            if (rt == null) return false;
+            var cam = formationUI.GetComponentInParent<Canvas>()?.worldCamera;
+            return RectTransformUtility.RectangleContainsScreenPoint(rt, screenPoint, cam);
         }
 
         /// <summary>
