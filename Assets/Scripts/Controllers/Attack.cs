@@ -36,8 +36,8 @@ namespace Immortal.Controllers
     public class FlightPathConfig
     {
         public FlightPathType type = FlightPathType.Linear;
-        public float speed = 10f;                // 基础速度
-        public float duration = 2f;              // 飞行持续时间
+        public float speed = 5f;                // 基础速度
+        public float duration = 1f;              // 飞行持续时间
         public float acceleration = 2f;          // 加速度（加速/减速类型）
         public float radius = 2f;                // 半径（绕圈类型）
         public float amplitude = 3f;             // 振幅（弹跳/曲线类型）
@@ -96,8 +96,27 @@ namespace Immortal.Controllers
             renderers = GetComponentsInChildren<Renderer>();
             if (renderers.Length > 0)
             {
-                originalColor = renderers[0].material.color;
+                originalColor = GetMaterialColor(renderers[0].material);
             }
+        }
+
+        private static string GetColorProperty(Material mat)
+        {
+            if (mat.HasProperty("_Color")) return "_Color";
+            if (mat.HasProperty("_TintColor")) return "_TintColor";
+            return null;
+        }
+
+        private static Color GetMaterialColor(Material mat)
+        {
+            string prop = GetColorProperty(mat);
+            return prop != null ? mat.GetColor(prop) : Color.white;
+        }
+
+        private static void SetMaterialColor(Material mat, Color color)
+        {
+            string prop = GetColorProperty(mat);
+            if (prop != null) mat.SetColor(prop, color);
         }
 
         /// <summary>
@@ -148,6 +167,16 @@ namespace Immortal.Controllers
 
                 float duration = flightConfig.duration;
 
+                // 在 duration 结束前提前开始淡出，使淡出在 duration 内完成
+                if (!isFading && visualConfig != null && visualConfig.fadeOutDuration > 0)
+                {
+                    float fadeStartThreshold = duration - visualConfig.fadeOutDuration;
+                    if (totalElapsedTime >= fadeStartThreshold)
+                    {
+                        StartFadeOut(visualConfig.fadeOutDuration, 0);
+                    }
+                }
+
                 // 检查是否飞行完成
                 if (totalElapsedTime >= duration)
                 {
@@ -157,9 +186,8 @@ namespace Immortal.Controllers
                     return;
                 }
 
-                // 计算并应用速度向量
-                Vector3 velocity = CalculateTrajectoryVelocity(totalElapsedTime, targetPosition);
-                rigidBody.velocity = velocity;
+                // 每帧更新速度向量
+                rigidBody.velocity = CalculateTrajectoryVelocity(totalElapsedTime, this.targetPosition);
             }
 
             // 处理淡出效果更新
@@ -207,14 +235,11 @@ namespace Immortal.Controllers
         {
             Vector3 direction = targetPosition - startPosition;
             float distance = direction.magnitude;
-            float duration = flightConfig.duration;
 
             if (distance == 0) return Vector3.zero;
 
             direction.Normalize();
-            float speed = distance / duration;
-
-            return direction * speed;
+            return direction * flightConfig.speed;
         }
 
         /// <summary>
@@ -223,14 +248,11 @@ namespace Immortal.Controllers
         private Vector3 CalculateAcceleratedVelocity(float progress, Vector3 targetPosition)
         {
             Vector3 direction = targetPosition - startPosition;
-            float distance = direction.magnitude;
-            float duration = flightConfig.duration;
 
-            if (distance == 0) return Vector3.zero;
+            if (direction.magnitude == 0) return Vector3.zero;
 
             direction.Normalize();
-            float averageSpeed = distance / duration;
-            float currentSpeed = averageSpeed * Mathf.Pow(1 + progress, flightConfig.acceleration);
+            float currentSpeed = flightConfig.speed * Mathf.Pow(1 + progress, flightConfig.acceleration);
 
             return direction * currentSpeed;
         }
@@ -241,14 +263,11 @@ namespace Immortal.Controllers
         private Vector3 CalculateDeceleratedVelocity(float progress, Vector3 targetPosition)
         {
             Vector3 direction = targetPosition - startPosition;
-            float distance = direction.magnitude;
-            float duration = flightConfig.duration;
 
-            if (distance == 0) return Vector3.zero;
+            if (direction.magnitude == 0) return Vector3.zero;
 
             direction.Normalize();
-            float averageSpeed = distance / duration;
-            float currentSpeed = averageSpeed * Mathf.Pow(1 - progress * 0.8f, flightConfig.acceleration);
+            float currentSpeed = flightConfig.speed * Mathf.Pow(1 - progress * 0.8f, flightConfig.acceleration);
 
             return direction * currentSpeed;
         }
@@ -275,7 +294,7 @@ namespace Immortal.Controllers
             // 向目标的径向速度
             Vector3 centerToTarget = targetPosition - startPosition;
             Vector3 radialDirection = centerToTarget.normalized;
-            float radialSpeed = centerToTarget.magnitude / duration;
+            float radialSpeed = flightConfig.speed;
 
             // 合成速度
             Vector3 tangentialVelocity = tangentialDirection * tangentialSpeed;
@@ -328,7 +347,7 @@ namespace Immortal.Controllers
             Vector3 horizontalDirection = targetPosition - startPosition;
             horizontalDirection.y = 0; // 只保留水平分量
             horizontalDirection.Normalize();
-            float horizontalSpeed = (targetPosition - startPosition).magnitude / duration;
+            float horizontalSpeed = flightConfig.speed;
 
             // 垂直方向的弹跳速度（正弦波的导数）
             float verticalSpeed = amplitude * frequency * Mathf.PI * Mathf.Cos(frequency * Mathf.PI * progress) / duration;
@@ -351,7 +370,7 @@ namespace Immortal.Controllers
             Vector3 horizontalDirection = targetPosition - startPosition;
             horizontalDirection.y = 0;
             horizontalDirection.Normalize();
-            float horizontalSpeed = (targetPosition - startPosition).magnitude / duration;
+            float horizontalSpeed = flightConfig.speed;
 
             // 垂直方向的抛物线速度：d/dt[4h*t*(1-t)] = 4h*(1-2t)
             float verticalSpeed = 4 * amplitude * (1 - 2 * progress) / duration;
@@ -398,6 +417,13 @@ namespace Immortal.Controllers
             startPosition = transform.position;
             this.targetPosition = targetPosition;
             totalElapsedTime = 0f;
+
+            // 计算并应用初始速度向量
+            if (rigidBody != null)
+            {
+                Vector3 initialVelocity = CalculateTrajectoryVelocity(0f, targetPosition);
+                rigidBody.velocity = initialVelocity;
+            }
         }
 
         /// <summary>
@@ -405,26 +431,15 @@ namespace Immortal.Controllers
         /// </summary>
         private void OnFlightComplete()
         {
-            // 停止物理运动
-            if (rigidBody != null)
-            {
-                rigidBody.velocity = Vector3.zero;
-            }
-
             // 触发击中效果
             if (flightConfig != null && flightConfig.type != FlightPathType.Homing)
             {
                 PlayHitEffect();
             }
 
-            // 检查是否需要开始淡出效果
-            if (visualConfig != null && visualConfig.fadeOutDuration > 0)
+            // 如果淡出未开始（fadeOutDuration 为 0 的情况），直接销毁
+            if (!isFading)
             {
-                StartFadeOut(visualConfig.fadeOutDuration, 0);
-            }
-            else
-            {
-                // 如果没有淡出效果，直接销毁对象
                 Destroy(gameObject);
             }
         }
@@ -458,25 +473,26 @@ namespace Immortal.Controllers
 
                 if (isFadeIn)
                 {
-                    // 淡入：从0到目标透明度
                     currentAlpha = targetAlpha * progress;
                 }
                 else
                 {
-                    // 淡出：从原始透明度到目标透明度
-                    float startAlpha = originalColor.a;
+                    float startAlpha = 1f;
                     currentAlpha = startAlpha + (targetAlpha - startAlpha) * progress;
                 }
 
-                // 更新颜色
-                Color newColor = originalColor;
-                newColor.a = currentAlpha;
+                // 将 alpha 乘到所有通道上
+                Color newColor = new Color(
+                    originalColor.r * currentAlpha,
+                    originalColor.g * currentAlpha,
+                    originalColor.b * currentAlpha,
+                    originalColor.a * currentAlpha);
 
                 foreach (var renderer in renderers)
                 {
                     if (renderer.material != null)
                     {
-                        renderer.material.color = newColor;
+                        SetMaterialColor(renderer.material, newColor);
                     }
                 }
             }
@@ -496,21 +512,20 @@ namespace Immortal.Controllers
         {
             if (renderers.Length == 0) return;
 
-            originalColor = renderers[0].material.color;
+            originalColor = GetMaterialColor(renderers[0].material);
             isFading = true;
             fadeStartTime = 0f;
             fadeDuration = duration;
             isFadeIn = true;
             this.targetAlpha = targetAlpha;
 
-            // 设置初始透明度为0
-            Color startColor = originalColor;
-            startColor.a = 0;
+            // 设置初始颜色全部归零（完全透明）
+            Color startColor = new Color(0, 0, 0, 0);
             foreach (var renderer in renderers)
             {
                 if (renderer.material != null)
                 {
-                    renderer.material.color = startColor;
+                    SetMaterialColor(renderer.material, startColor);
                 }
             }
         }
@@ -522,12 +537,13 @@ namespace Immortal.Controllers
         {
             if (renderers.Length == 0) return;
 
-            originalColor = renderers[0].material.color;
+            originalColor = GetMaterialColor(renderers[0].material);
             isFading = true;
             fadeStartTime = 0f;
             fadeDuration = duration;
             isFadeIn = false;
             this.targetAlpha = targetAlpha;
+
         }
 
         /// <summary>
@@ -555,14 +571,15 @@ namespace Immortal.Controllers
             this.skillInstance = skillInstance;
             this.attackCollider = GetComponent<Collider>();
             this.rigidBody = GetComponent<Rigidbody>();
+            if (this.rigidBody == null)
+                this.rigidBody = gameObject.AddComponent<Rigidbody>();
 
             // 配置物理体用于飞行轨迹
             if (rigidBody != null)
             {
-                rigidBody.mass = 0.5f;
+                //rigidBody.mass = 0.5f;
                 rigidBody.useGravity = false; // 禁用重力
                 rigidBody.drag = 0f;          // 禁用线性阻尼
-                rigidBody.angularDrag = 0f;   // 禁用角度阻尼
             }
 
             attackCallback = skillConfig.callback;
@@ -609,12 +626,15 @@ namespace Immortal.Controllers
             // 应用旋转
             transform.eulerAngles = visualConfig.rotation;
 
-            // 应用颜色
-            foreach (var renderer in renderers)
+            // 应用颜色（仅当显式配置了非白色时才覆盖材质原色）
+            if (visualConfig.color != Color.white)
             {
-                if (renderer.material != null)
+                foreach (var renderer in renderers)
                 {
-                    renderer.material.color = visualConfig.color;
+                    if (renderer.material != null)
+                    {
+                        SetMaterialColor(renderer.material, visualConfig.color);
+                    }
                 }
             }
 
@@ -655,12 +675,12 @@ namespace Immortal.Controllers
                 flightPath = new FlightPathConfig
                 {
                     type = FlightPathType.Linear,
-                    speed = speed,
-                    duration = 0.5f
+                    speed = speed
                 },
                 visual = new VisualEffectConfig
                 {
                     prefabPath = "", // 使用当前对象
+                    fadeInDuration = 0.0f,
                     fadeOutDuration = 0.5f
                 },
                 callback = callback
@@ -681,16 +701,14 @@ namespace Immortal.Controllers
         /// <summary>
         /// 创建线性飞行技能效果
         /// </summary>
-        public static SkillEffectConfig CreateLinearSkillEffect(string direction, float speed = 10f, string prefabPath = "", AttackCallback callback = null)
+        public static SkillEffectConfig CreateLinearSkillEffect(string direction, string prefabPath = "", AttackCallback callback = null)
         {
             return new SkillEffectConfig
             {
                 directionType = direction == "left" ? SkillEffectConfig.DirectionType.Left : SkillEffectConfig.DirectionType.Right,
                 flightPath = new FlightPathConfig
                 {
-                    type = FlightPathType.Linear,
-                    speed = speed,
-                    duration = 3f
+                    type = FlightPathType.Linear
                 },
                 visual = new VisualEffectConfig
                 {
@@ -704,7 +722,7 @@ namespace Immortal.Controllers
         /// <summary>
         /// 创建抛物线技能效果
         /// </summary>
-        public static SkillEffectConfig CreateParabolicSkillEffect(string direction, float speed = 8f, float height = 3f, string prefabPath = "", AttackCallback callback = null)
+        public static SkillEffectConfig CreateParabolicSkillEffect(string direction, float height = 3f, string prefabPath = "", AttackCallback callback = null)
         {
             return new SkillEffectConfig
             {
@@ -712,8 +730,6 @@ namespace Immortal.Controllers
                 flightPath = new FlightPathConfig
                 {
                     type = FlightPathType.Curve,
-                    speed = speed,
-                    duration = 2.5f,
                     amplitude = height
                 },
                 visual = new VisualEffectConfig
@@ -729,7 +745,7 @@ namespace Immortal.Controllers
         /// <summary>
         /// 创建追踪技能效果
         /// </summary>
-        public static SkillEffectConfig CreateHomingSkillEffect(Transform target, float speed = 6f, string prefabPath = "", AttackCallback callback = null)
+        public static SkillEffectConfig CreateHomingSkillEffect(Transform target, string prefabPath = "", AttackCallback callback = null)
         {
             return new SkillEffectConfig
             {
@@ -738,8 +754,6 @@ namespace Immortal.Controllers
                 flightPath = new FlightPathConfig
                 {
                     type = FlightPathType.Homing,
-                    speed = speed,
-                    duration = 4f,
                     targetTransform = target
                 },
                 visual = new VisualEffectConfig
@@ -754,7 +768,7 @@ namespace Immortal.Controllers
         /// <summary>
         /// 创建圆形轨迹技能效果
         /// </summary>
-        public static SkillEffectConfig CreateCircularSkillEffect(string direction, float speed = 5f, float radius = 2f, float circles = 1f, string prefabPath = "", AttackCallback callback = null)
+        public static SkillEffectConfig CreateCircularSkillEffect(string direction, float radius = 2f, float circles = 1f, string prefabPath = "", AttackCallback callback = null)
         {
             return new SkillEffectConfig
             {
@@ -762,8 +776,6 @@ namespace Immortal.Controllers
                 flightPath = new FlightPathConfig
                 {
                     type = FlightPathType.Circular,
-                    speed = speed,
-                    duration = 3f,
                     radius = radius,
                     frequency = circles
                 },

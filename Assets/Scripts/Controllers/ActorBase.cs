@@ -201,23 +201,22 @@ namespace Immortal.Controllers
                 var skillInstance = cultivator.CreateSkillInstance(0);
                 
                 // Unity中需要通过不同方式处理攻击实例
-                CreateAttackInstance(new Vector3(position.x, position.y + 2f, position.z), skillInstance, callback);
+                CreateAttackInstance(new Vector3(position.x, position.y + initialColliderHeight *0.5f, position.z), skillInstance, callback);
             }
         }
 
         private void CreateAttackInstance(Vector3 position, Immortal.Core.SkillInstance skillInstance, AttackCallback callback)
         {
             // Unity攻击实例创建逻辑
-            GameObject attackPrefab = Resources.Load<GameObject>("Prefabs/Attack/AttackSprite");
+            GameObject attackPrefab = Resources.Load<GameObject>("Prefabs/Skills/Attack");
             if (attackPrefab != null)
             {
                 GameObject attackInstance = Instantiate(attackPrefab, position, Quaternion.identity);
-                var attackComponent = attackInstance.GetComponent<Immortal.Controllers.Attack>();
-                if (attackComponent != null)
-                {
-                    string direction = orientation > 0 ? "right" : "left";
-                    attackComponent.TriggerAttackEffect(direction, 10f, skillInstance, callback);
-                }
+                Immortal.Controllers.Attack attackComponent = attackInstance.GetComponent<Immortal.Controllers.Attack>()
+                                   ?? attackInstance.AddComponent<Immortal.Controllers.Attack>();
+                string direction = orientation > 0 ? "right" : "left";
+                var skillConfig = Immortal.Controllers.Attack.CreateLinearSkillEffect(direction, callback: callback);
+                attackComponent.TriggerSkillEffect(skillConfig, skillInstance);
             }
         }
 

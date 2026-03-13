@@ -31,6 +31,7 @@ namespace Immortal.Combat
         public float aggressiveness = 0.7f;      // 攻击性 (0-1)
         public float defensiveness = 0.5f;       // 防御性 (0-1)
         public float teamwork = 0.6f;           // 团队协作性 (0-1)
+        public float attackInterval = 1.5f;     // 攻击间隔（秒）
     }
 
     // 战斗决策结果
@@ -61,6 +62,9 @@ namespace Immortal.Combat
 
         // AI配置
         private CombatAIConfig config = new CombatAIConfig();
+
+        // 攻击冷却计时
+        private float attackCooldown = 0f;
 
         // 战斗单位列表
         private List<ActorBase> allies = new List<ActorBase>();
@@ -291,6 +295,7 @@ namespace Immortal.Combat
 
             stateTimer += deltaTime;
             decisionCooldown -= deltaTime;
+            attackCooldown -= deltaTime;
 
             // 更新仇恨值系统
             UpdateHatredLevels(deltaTime);
@@ -511,8 +516,13 @@ namespace Immortal.Combat
             // 面向目标
             Vector3 direction = GetActorPosition(target) - GetActorPosition(actor);
             SetActorOrientation(actor, direction.x > 0 ? 1 : -1);
-            // 执行攻击
+
+            // 攻击冷却检查
+            if (attackCooldown > 0f) return;
+
+            // 执行攻击并重置冷却
             ActorAttack(actor);
+            attackCooldown = config.attackInterval;
         }
 
         /// <summary>
